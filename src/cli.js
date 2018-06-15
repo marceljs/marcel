@@ -6,7 +6,7 @@ const Bundler = require('./bundler');
 
 const bundler = new Bundler();
 
-console.log(bundler.config);
+console.log(bundler.render());
 
 program.version(version);
 program.parse(process.argv);
