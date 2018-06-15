@@ -1,13 +1,38 @@
 {
-  "name": "marcel",
-  "version": "0.1.0",
-  "description": "A simple, pluggable, static site generator.",
-  "main": "index.js",
-  "repository": "git@github.com:danburzo/marcel.git",
-  "author": "Dan Burzo <danburzo@gmail.com>",
-  "license": "MIT",
-  "dependencies": {
-    "chalk": "^2.4.1",
-    "commander": "^2.15.1"
-  }
+	"name": "marcel",
+	"version": "0.1.0",
+	"description": "A simple, pluggable, static site generator.",
+	"main": "index.js",
+	"repository": "git@github.com:danburzo/marcel.git",
+	"author": "Dan Burzo <danburzo@gmail.com>",
+	"license": "MIT",
+	"bin": {
+		"marcel": "bin/cli.js"
+	},
+	"engines": {
+		"node": ">= 8.0.0"
+	},
+	"dependencies": {
+		"chalk": "^2.4.1",
+		"commander": "^2.15.1"
+	},
+	"devDependencies": {
+		"husky": "^0.14.3",
+		"prettier": "1.13.5",
+		"pretty-quick": "^1.6.0"
+	},
+	"scripts": {
+		"precommit": "pretty-quick --staged"
+	},
+	"prettier": {
+		"bracketSpacing": true,
+		"semi": true,
+		"singleQuote": true,
+		"trailingComma": "none",
+		"useTabs": true,
+		"tabWidth": 4,
+		"jsxBracketSameLine": false,
+		"arrowParens": "avoid",
+		"printWidth": 100
+	}
 }
