@@ -11,11 +11,19 @@ class Bundler {
 		this.base = process.cwd();
 		this.config = config(this);
 		this.template_parser = template_parser(this);
-		fg.sync([`${this.config.contentDir}/**/*.md`]).forEach(entry => markdown_processor(entry));
+		Promise.all(
+			fg.sync([`${this.config.contentDir}/**/*.md`]).map(entry => markdown_processor(entry))
+		).then(entries => {
+			entries
+				.map(post => {
+					return this.render(post);
+				})
+				.forEach(res => console.log(res));
+		});
 	}
 
-	render() {
-		return this.template_parser.render(template_hierarchy()[0], { name: 'Dan' });
+	render(post) {
+		return this.template_parser.render(template_hierarchy()[0], { post });
 	}
 }
 
