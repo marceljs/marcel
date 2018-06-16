@@ -28,6 +28,10 @@ class Bundler {
 		Promise.all(
 			fg.sync([`${this.config.contentDir}/**/*.md`]).map(entry => markdown_processor(entry))
 		).then(entries => {
+			// Copy the `static` folder over to `dist`
+			fs.copy(this.config.staticDir, this.config.distDir);
+
+			// Build the individual posts
 			entries
 				.map(post => {
 					return {
@@ -36,12 +40,8 @@ class Bundler {
 					};
 				})
 				.forEach(res => {
-					fs.outputFile(
-						`${this.config.distDir}/${this.config.permalinks.single(
-							res.post
-						)}/index.html`,
-						res.rendered
-					);
+					let permalink = this.config.permalinks.single(res.post);
+					fs.outputFile(`${this.config.distDir}/${permalink}/index.html`, res.rendered);
 				});
 		});
 	}
