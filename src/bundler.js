@@ -1,37 +1,27 @@
-const config = require('./config');
-const template_parser = require('./templates/parser');
-const hierarchy_single = require('./templates/hierarchy-single');
-const hierarchy_list = require('./templates/hierarchy-list');
-const error_dist_dir = require('./errors/dist-dir');
-
-const permalinks_single = require('./permalinks/single');
-const permalinks_list = require('./permalinks/list');
-
-const read_data_files = require('./data/read');
-const read_content_files = require('./content/read');
-
+// Libs
 const fs = require('fs-extra');
 const path = require('path');
-
 const inCwd = require('is-path-in-cwd');
 
-const find_template = (templates, base) =>
-	templates.find(template => {
-		const template_path = path.join(base, template);
-		return fs.existsSync(template_path);
-	});
-
-const create_site = config => ({
-	link: config.base,
-	permalinks: config.permalinks
-});
+// Modules
+const config = require('./config');
+const renderer = require('./templates/renderer');
+const render_single = require('./templates/render-single');
+const error_dist_dir = require('./errors/dist-dir');
+const permalinks_single = require('./permalinks/single');
+const permalinks_list = require('./permalinks/list');
+const read_data_files = require('./data/read');
+const read_content_files = require('./content/read');
 
 class Bundler {
 	constructor() {
 		this.base = process.cwd();
 		this.config = config(this);
-		this.template_parser = template_parser(this);
-		this.site = create_site(this.config);
+		this.site = {
+			link: this.config.base
+		};
+
+		this.renderer = renderer(this.config);
 
 		this.run();
 	}
@@ -44,7 +34,7 @@ class Bundler {
 		data_files.forEach(f => (data[f.stem] = f.data));
 		this.data = data;
 
-		let entries = await read_content_files(this.config.contentDir);
+		let posts = await read_content_files(this.config.contentDir);
 
 		if (!inCwd(this.config.distDir)) {
 			throw Error(error_dist_dir(this.config.distDir));
@@ -55,33 +45,17 @@ class Bundler {
 		// Copy the `static` folder over to `dist`
 		fs.copy(this.config.staticDir, this.config.distDir);
 
-		// Build the individual posts
-		entries
-			.map(post => {
-				return {
-					post,
-					rendered: this.render(post, this.site, this.data, this.config)
-				};
-			})
-			.forEach(res => {
-				let permalink = permalinks_single(res.post, this.config);
-				fs.outputFile(`${this.config.distDir}/${permalink}/index.html`, res.rendered);
-			});
-	}
-
-	render(post, site, data, config) {
-		let templates = hierarchy_single(post, config.templateExt);
-		let template = find_template(templates, config.templateDir);
-		if (template) {
+		// Render, and write to disk, the individual posts
+		posts.forEach(post => {
 			let context = {
 				post,
-				site,
-				data
+				site: this.site,
+				data: this.data
 			};
-			return this.template_parser.render(template, context);
-		} else {
-			throw new Error('Could not find a matching template');
-		}
+			post.__rendered_html = render_single(this.renderer, context, this.config);
+			let permalink = permalinks_single(post, this.config);
+			fs.outputFile(`${this.config.distDir}/${permalink}/index.html`, post.__rendered_html);
+		});
 	}
 }
 

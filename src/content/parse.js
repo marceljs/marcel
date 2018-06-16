@@ -1,11 +1,12 @@
-const vfile = require('to-vfile');
+// Libs
 const remark = require('remark');
 const frontmatter = require('remark-frontmatter');
 const parse_yaml = require('remark-parse-yaml');
 const html = require('remark-html');
 const visit = require('unist-util-visit');
 
-const Post = require('./post');
+// Modules
+const Post = require('../models/post');
 
 const processor = remark()
 	.use(frontmatter)

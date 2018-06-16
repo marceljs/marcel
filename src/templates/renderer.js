@@ -1,7 +1,7 @@
 const nunjucks = require('nunjucks');
 
-module.exports = bundler => {
-	nunjucks.configure(bundler.config.templateDir, {
+module.exports = config => {
+	nunjucks.configure(config.templateDir, {
 		autoescape: false
 	});
 	return nunjucks;
