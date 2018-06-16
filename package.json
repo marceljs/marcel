@@ -16,6 +16,7 @@
 		"@sindresorhus/slugify": "^0.3.0",
 		"chalk": "^2.4.1",
 		"commander": "^2.15.1",
+		"deepmerge": "^2.1.1",
 		"fast-glob": "^2.2.2",
 		"fs-extra": "^6.0.1",
 		"is-path-cwd": "^2.0.0",

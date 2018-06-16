@@ -7,11 +7,10 @@ module.exports = {
 	base: '/',
 	templateExt: 'html',
 	permalinks: {
-		single: function(post, site) {
-			return `${post.directory}/${post.slug || post.filename_slug || post.title_slug}`;
-		},
-		list: function(list, site) {
-			return ``;
-		}
+		// see the default permalink scheme in src/defaults/default.permalinks-single.js
+		single: (post, site) => false,
+
+		// see the default permalink scheme in src/defaults/default.permalinks-list.js
+		list: (list, site) => false
 	}
 };

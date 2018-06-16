@@ -4,6 +4,9 @@ const hierarchy = require('./templates/hierarchy');
 const markdown_processor = require('./content/markdown');
 const error_dist_dir = require('./errors/dist-dir');
 
+const permalinks_single = require('./permalinks/single');
+const permalinks_list = require('./permalinks/list');
+
 const fs = require('fs-extra');
 const fg = require('fast-glob');
 const path = require('path');
@@ -50,7 +53,7 @@ class Bundler {
 					};
 				})
 				.forEach(res => {
-					let permalink = this.config.permalinks.single(res.post);
+					let permalink = permalinks_single(res.post, this.config);
 					fs.outputFile(`${this.config.distDir}/${permalink}/index.html`, res.rendered);
 				});
 		});
