@@ -14,7 +14,8 @@ const find_template = (templates, base) =>
 	});
 
 const create_site = config => ({
-	link: config.base
+	link: config.base,
+	permalinks: config.permalinks
 });
 
 class Bundler {

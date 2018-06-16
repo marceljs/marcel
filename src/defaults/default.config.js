@@ -5,5 +5,13 @@ module.exports = {
 	staticDir: 'static',
 	distDir: 'dist',
 	base: '/',
-	templateExt: 'html'
+	templateExt: 'html',
+	permalinks: {
+		single: function(post, site) {
+			return `${post.slug || post.filename_slug || post.title_slug}`;
+		},
+		list: function(list, site) {
+			return ``;
+		}
+	}
 };
