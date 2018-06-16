@@ -16,7 +16,7 @@ Like [Hugo](https://gohugo.io), Marcel is named after a [great writer](https://e
 
 I want to build a generator just the way I like it:
 
--   Have the templates in an expressive language that allows for inheritance; hence [nunjucks]() (which is related to Twig and Jinja2, for PHP and Python, respectively).
+-   Have the templates in an expressive language that allows for inheritance; hence [nunjucks](https://mozilla.github.io/nunjucks/) (which is related to Twig and Jinja2, for PHP and Python, respectively).
 -   Keep the content mostly Markdown, but have better control on how it gets transformed to HTML
 -   Organize the content (and the matching templates for that content) in a way that makes sense. The [template hierarchy](https://forklor.github.io/wp-template-hierarchy) is is one of the best parts in WordPress.
 -   etc etc.

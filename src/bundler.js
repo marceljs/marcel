@@ -2,10 +2,13 @@ const config = require('./config');
 const template_parser = require('./templates/parser');
 const hierarchy = require('./templates/hierarchy');
 const markdown_processor = require('./content/markdown');
+const error_dist_dir = require('./errors/dist-dir');
 
 const fs = require('fs-extra');
 const fg = require('fast-glob');
 const path = require('path');
+
+const inCwd = require('is-path-in-cwd');
 
 const find_template = (templates, base) =>
 	templates.find(template => {
@@ -30,6 +33,10 @@ class Bundler {
 				.sync([`**/*.md`], { cwd: this.config.contentDir })
 				.map(entry => markdown_processor(entry, this.config.contentDir))
 		).then(async entries => {
+			if (!inCwd(this.config.distDir)) {
+				throw Error(error_dist_dir(this.config.distDir));
+			}
+
 			await fs.emptyDir(this.config.distDir);
 			// Copy the `static` folder over to `dist`
 			fs.copy(this.config.staticDir, this.config.distDir);
