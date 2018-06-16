@@ -35,6 +35,9 @@ const data_content_types = '**/*.{json,yaml,csv,tsv,ndtxt}';
 // pattern for matching content types in the `content` folder
 const content_types = '**/*.md';
 
+// shorter Promise.all, because reasons.
+const all = Promise.all.bind(Promise);
+
 class Bundler {
 	constructor() {
 		this.base = process.cwd();
@@ -46,25 +49,45 @@ class Bundler {
 	}
 
 	async run() {
-		// read data files
-		let data_files = (await Promise.all(
-			(await fg(data_content_types, { cwd: this.config.dataDir })).map(filepath =>
-				vfile.read(path.join(this.config.dataDir, filepath), 'utf8')
-			)
-		)).map(file => parse_data(file));
+		/*
+			1. Read the data files (from the `data` folder)
+			-----------------------------------------------------
+		 */
+		let data_files = // wait for all the files to be read
+		(await all(
+			// wait for fast-glob to find our files...
+			(await fg(data_content_types, { cwd: this.config.dataDir }))
+				// ...then read their contents
+				.map(filepath => vfile.read(path.join(this.config.dataDir, filepath), 'utf8'))
+		))
+			// ...then parse their contents
+			.map(file => parse_data(file));
+
+		// populate this.data with the content of the data files.
 
 		let data = {};
 		data_files.forEach(f => (data[f.stem] = f.data));
 		this.data = data;
 
-		// read content files
-		let entries = await Promise.all(
-			(await Promise.all(
-				(await fg(content_types, { cwd: this.config.contentDir })).map(filepath =>
-					vfile.read(path.join(this.config.contentDir, filepath), 'utf8')
-				)
-			)).map(f => parse_content(f))
-		);
+		/*
+			2. Read the content files (from the `content` folder)
+			-----------------------------------------------------
+		 */
+		let entries =
+			// wait for all the entries to be parsed
+			await all(
+				// wait for the content of our files...
+				(await all(
+					// wait for fast-glob to find our content files...
+					(await fg(content_types, { cwd: this.config.contentDir }))
+						// ...then read their contents
+						.map(filepath =>
+							vfile.read(path.join(this.config.contentDir, filepath), 'utf8')
+						)
+				))
+					// then parse the content
+					.map(f => parse_content(f))
+			);
 
 		if (!inCwd(this.config.distDir)) {
 			throw Error(error_dist_dir(this.config.distDir));
