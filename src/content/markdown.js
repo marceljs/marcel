@@ -20,6 +20,7 @@ module.exports = async path => {
 	let content = await processor.stringify(tree);
 	return {
 		...data,
+		data,
 		content
 	};
 };
