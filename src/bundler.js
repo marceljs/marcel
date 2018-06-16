@@ -10,31 +10,40 @@ const path = require('path');
 const find_template = (templates, base) =>
 	templates.find(template => {
 		const template_path = path.join(base, template);
-		console.log(template_path);
 		return fs.existsSync(template_path);
 	});
+
+const create_site = config => ({
+	link: config.base
+});
 
 class Bundler {
 	constructor() {
 		this.base = process.cwd();
 		this.config = config(this);
 		this.template_parser = template_parser(this);
+		this.site = create_site(this.config);
+
 		Promise.all(
 			fg.sync([`${this.config.contentDir}/**/*.md`]).map(entry => markdown_processor(entry))
 		).then(entries => {
 			entries
 				.map(post => {
-					return this.render(post, this.config);
+					return this.render(post, this.site, this.config);
 				})
 				.forEach(res => console.log(res));
 		});
 	}
 
-	render(post, config) {
+	render(post, site, config) {
 		let templates = hierarchy.single(post, config.templateExt);
 		let template = find_template(templates, config.templateDir);
 		if (template) {
-			return this.template_parser.render(template, { post });
+			let context = {
+				post,
+				site
+			};
+			return this.template_parser.render(template, context);
 		} else {
 			throw new Error('Could not find a matching template');
 		}
