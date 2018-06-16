@@ -3,7 +3,7 @@ const template_parser = require('./templates/parser');
 const hierarchy = require('./templates/hierarchy');
 const markdown_processor = require('./content/markdown');
 
-const fs = require('fs');
+const fs = require('fs-extra');
 const fg = require('fast-glob');
 const path = require('path');
 
@@ -30,9 +30,19 @@ class Bundler {
 		).then(entries => {
 			entries
 				.map(post => {
-					return this.render(post, this.site, this.config);
+					return {
+						post,
+						rendered: this.render(post, this.site, this.config)
+					};
 				})
-				.forEach(res => console.log(res));
+				.forEach(res => {
+					fs.outputFile(
+						`${this.config.distDir}/${this.config.permalinks.single(
+							res.post
+						)}/index.html`,
+						res.rendered
+					);
+				});
 		});
 	}
 
