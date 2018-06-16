@@ -2,7 +2,6 @@ const config = require('./config');
 const template_parser = require('./templates/parser');
 const hierarchy_single = require('./templates/hierarchy-single');
 const hierarchy_list = require('./templates/hierarchy-list');
-const markdown_processor = require('./content/markdown');
 const error_dist_dir = require('./errors/dist-dir');
 
 const permalinks_single = require('./permalinks/single');
@@ -12,7 +11,10 @@ const fs = require('fs-extra');
 const fg = require('fast-glob');
 const path = require('path');
 
-const load_data = require('./data/load');
+const parse_data = require('./data/parse');
+const parse_content = require('./content/parse');
+
+const vfile = require('to-vfile');
 
 const inCwd = require('is-path-in-cwd');
 
@@ -27,49 +29,64 @@ const create_site = config => ({
 	permalinks: config.permalinks
 });
 
+// pattern for matching content types in the `data` folder
+const data_content_types = '**/*.{json,yaml,csv,tsv,ndtxt}';
+
+// pattern for matching content types in the `content` folder
+const content_types = '**/*.md';
+
 class Bundler {
 	constructor() {
 		this.base = process.cwd();
 		this.config = config(this);
 		this.template_parser = template_parser(this);
 		this.site = create_site(this.config);
-		load_data(fg.sync(['**/*.*'], { cwd: this.config.dataDir }), this.config.dataDir).then(
-			data_entries => {
-				this.data = {};
 
-				data_entries.forEach(entry => (this.data[entry.name] = entry.result));
+		this.run();
+	}
 
-				Promise.all(
-					fg
-						.sync([`**/*.md`], { cwd: this.config.contentDir })
-						.map(entry => markdown_processor(entry, this.config.contentDir))
-				).then(async entries => {
-					if (!inCwd(this.config.distDir)) {
-						throw Error(error_dist_dir(this.config.distDir));
-					}
+	async run() {
+		// read data files
+		let data_files = (await Promise.all(
+			(await fg(data_content_types, { cwd: this.config.dataDir })).map(filepath =>
+				vfile.read(path.join(this.config.dataDir, filepath), 'utf8')
+			)
+		)).map(file => parse_data(file));
 
-					await fs.emptyDir(this.config.distDir);
-					// Copy the `static` folder over to `dist`
-					fs.copy(this.config.staticDir, this.config.distDir);
+		let data = {};
+		data_files.forEach(f => (data[f.stem] = f.data));
+		this.data = data;
 
-					// Build the individual posts
-					entries
-						.map(post => {
-							return {
-								post,
-								rendered: this.render(post, this.site, this.data, this.config)
-							};
-						})
-						.forEach(res => {
-							let permalink = permalinks_single(res.post, this.config);
-							fs.outputFile(
-								`${this.config.distDir}/${permalink}/index.html`,
-								res.rendered
-							);
-						});
-				});
-			}
+		// read content files
+		let entries = await Promise.all(
+			(await Promise.all(
+				(await fg(content_types, { cwd: this.config.contentDir })).map(filepath =>
+					vfile.read(path.join(this.config.contentDir, filepath), 'utf8')
+				)
+			)).map(f => parse_content(f))
 		);
+
+		if (!inCwd(this.config.distDir)) {
+			throw Error(error_dist_dir(this.config.distDir));
+		}
+
+		await fs.emptyDir(this.config.distDir);
+
+		// Copy the `static` folder over to `dist`
+		fs.copy(this.config.staticDir, this.config.distDir);
+
+		// Build the individual posts
+		entries
+			.map(post => {
+				return {
+					post,
+					rendered: this.render(post, this.site, this.data, this.config)
+				};
+			})
+			.forEach(res => {
+				let permalink = permalinks_single(res.post, this.config);
+				fs.outputFile(`${this.config.distDir}/${permalink}/index.html`, res.rendered);
+			});
 	}
 
 	render(post, site, data, config) {

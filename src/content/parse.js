@@ -12,13 +12,12 @@ const processor = remark()
 	.use(parse_yaml)
 	.use(html);
 
-module.exports = async (path, contentDir) => {
-	let file = vfile.readSync(`${contentDir}/${path}`, 'utf-8');
+module.exports = async file => {
 	let tree = await processor.run(processor.parse(file));
 	let data = {};
 	visit(tree, 'yaml', item => {
 		data = { ...data, ...item.data.parsedValue };
 	});
 	let content = await processor.stringify(tree);
-	return new Post({ content, data, path });
+	return new Post({ content, data, path: file.path });
 };
