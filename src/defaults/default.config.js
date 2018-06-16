@@ -4,5 +4,6 @@ module.exports = {
 	templateDir: 'templates',
 	staticDir: 'static',
 	distDir: 'dist',
-	typesDir: 'types'
+	base: '/',
+	templateExt: 'html'
 };
