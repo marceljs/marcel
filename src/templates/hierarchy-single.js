@@ -1,8 +1,8 @@
 /*
-	Template hierarchy
+	Template hierarchy for single posts
  */
 
-const single_taxonomy = (post, ext) => {
+module.exports = (post, ext) => {
 	let templates = [];
 	if (post.layout) {
 		templates.push(`single-${post.section}-${post.layout}.${ext}`);
@@ -13,11 +13,4 @@ const single_taxonomy = (post, ext) => {
 		templates.push(`single-${post.type}.${ext}`);
 	}
 	return templates.concat([`single-${post.section}.${ext}`, `single.${ext}`, `index.${ext}`]);
-};
-
-const list_taxonomy = list => [];
-
-module.exports = {
-	single: single_taxonomy,
-	list: list_taxonomy
 };
