@@ -1,4 +1,6 @@
 module.exports = function(list, site) {
-	// TODO
-	return ``;
+	if (list !== 'default') {
+		return `${list}`;
+	}
+	return '';
 };
