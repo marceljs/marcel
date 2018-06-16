@@ -3,5 +3,6 @@ module.exports = {
 	dataDir: 'data',
 	templateDir: 'templates',
 	staticDir: 'static',
-	distDir: 'dist'
+	distDir: 'dist',
+	typesDir: 'types'
 };
