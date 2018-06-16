@@ -1,8 +1,10 @@
 const slugify = require('@sindresorhus/slugify');
 const nodePath = require('path');
 
+const strip_filename_prefix = require('../util/strip-filename-prefix');
+
 class Post {
-	constructor({ content, data, path, site }) {
+	constructor({ data, content, file }) {
 		// copy data over to the object
 		// TODO make sure none of the data overwrites any property or method
 		Object.assign(this, data);
@@ -17,13 +19,15 @@ class Post {
 			this.title_slug = slugify(this.title);
 		}
 
-		this.path = path;
-
-		this.directory = nodePath.dirname(path);
-		this.filename = nodePath.basename(path, nodePath.extname(path)).replace(/^\d+\-+/, '');
+		this.path = file.path;
+		this.directory = file.dirname;
+		this.filename = strip_filename_prefix(file.stem);
 		this.filename_slug = slugify(this.filename);
 
-		// this.permalink =
+		this.section = this.directory.split(nodePath.sep)[0];
+		if (this.section === '.') {
+			this.section = 'default';
+		}
 	}
 }
 

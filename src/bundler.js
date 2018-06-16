@@ -7,11 +7,16 @@ const inCwd = require('is-path-in-cwd');
 const config = require('./config');
 const renderer = require('./templates/renderer');
 const render_single = require('./templates/render-single');
+const render_list = require('./templates/render-list');
 const error_dist_dir = require('./errors/dist-dir');
 const permalinks_single = require('./permalinks/single');
 const permalinks_list = require('./permalinks/list');
 const read_data_files = require('./data/read');
 const read_content_files = require('./content/read');
+const group_by = require('./util/group-by');
+
+// Models
+const Post = require('./models/post');
 
 class Bundler {
 	constructor() {
@@ -36,6 +41,8 @@ class Bundler {
 
 		let posts = await read_content_files(this.config.contentDir);
 
+		posts = posts.map(post => new Post(post));
+
 		if (!inCwd(this.config.distDir)) {
 			throw Error(error_dist_dir(this.config.distDir));
 		}
@@ -46,16 +53,35 @@ class Bundler {
 		fs.copy(this.config.staticDir, this.config.distDir);
 
 		// Render, and write to disk, the individual posts
+
 		posts.forEach(post => {
 			let context = {
 				post,
 				site: this.site,
 				data: this.data
 			};
-			post.__rendered_html = render_single(this.renderer, context, this.config);
+			let html = render_single(this.renderer, context, this.config);
 			let permalink = permalinks_single(post, this.config);
-			fs.outputFile(`${this.config.distDir}/${permalink}/index.html`, post.__rendered_html);
+			this.write_page(permalink, html);
 		});
+
+		// Render, and write to disk, post lists
+		let sections = group_by(posts, post => post.section);
+
+		Object.keys(sections).forEach(section => {
+			let context = {
+				posts: sections[section],
+				site: this.site,
+				data: this.data
+			};
+			let html = render_list(this.renderer, context, this.config);
+			let permalink = permalinks_list(section, this.config);
+			this.write_page(permalink, html);
+		});
+	}
+
+	async write_page(permalink, content) {
+		fs.outputFile(path.join(this.config.distDir, permalink, 'index.html'), content);
 	}
 }
 

@@ -5,9 +5,6 @@ const parse_yaml = require('remark-parse-yaml');
 const html = require('remark-html');
 const visit = require('unist-util-visit');
 
-// Modules
-const Post = require('../models/post');
-
 const processor = remark()
 	.use(frontmatter)
 	.use(parse_yaml)
@@ -20,5 +17,9 @@ module.exports = async file => {
 		data = { ...data, ...item.data.parsedValue };
 	});
 	let content = await processor.stringify(tree);
-	return new Post({ content, data, path: file.path });
+	return {
+		file,
+		data,
+		content
+	};
 };

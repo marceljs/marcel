@@ -1,4 +1,5 @@
 // Libs
+const fs = require('fs-extra');
 const fg = require('fast-glob');
 const path = require('path');
 const vfile = require('to-vfile');
@@ -12,7 +13,15 @@ module.exports = async cwd => {
 
 	// ...then read their contents
 	entries = await Promise.all(
-		entries.map(filepath => vfile.read(path.join(cwd, filepath), 'utf8'))
+		entries.map(filepath =>
+			vfile.read(
+				{
+					path: filepath,
+					cwd
+				},
+				'utf8'
+			)
+		)
 	);
 
 	// ...finally parse their content
