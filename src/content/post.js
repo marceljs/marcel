@@ -19,6 +19,7 @@ class Post {
 
 		this.path = path;
 
+		this.directory = nodePath.dirname(path);
 		this.filename = nodePath.basename(path, nodePath.extname(path)).replace(/^\d+\-+/, '');
 		this.filename_slug = slugify(this.filename);
 

@@ -12,8 +12,8 @@ const processor = remark()
 	.use(parse_yaml)
 	.use(html);
 
-module.exports = async path => {
-	let file = vfile.readSync(path, 'utf-8');
+module.exports = async (path, contentDir) => {
+	let file = vfile.readSync(`${contentDir}/${path}`, 'utf-8');
 	let tree = await processor.run(processor.parse(file));
 	let data = {};
 	visit(tree, 'yaml', item => {

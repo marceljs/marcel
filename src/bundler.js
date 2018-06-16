@@ -26,8 +26,11 @@ class Bundler {
 		this.site = create_site(this.config);
 
 		Promise.all(
-			fg.sync([`${this.config.contentDir}/**/*.md`]).map(entry => markdown_processor(entry))
-		).then(entries => {
+			fg
+				.sync([`**/*.md`], { cwd: this.config.contentDir })
+				.map(entry => markdown_processor(entry, this.config.contentDir))
+		).then(async entries => {
+			await fs.emptyDir(this.config.distDir);
 			// Copy the `static` folder over to `dist`
 			fs.copy(this.config.staticDir, this.config.distDir);
 

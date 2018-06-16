@@ -8,7 +8,7 @@ module.exports = {
 	templateExt: 'html',
 	permalinks: {
 		single: function(post, site) {
-			return `${post.slug || post.filename_slug || post.title_slug}`;
+			return `${post.directory}/${post.slug || post.filename_slug || post.title_slug}`;
 		},
 		list: function(list, site) {
 			return ``;
