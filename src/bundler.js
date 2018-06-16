@@ -48,46 +48,41 @@ class Bundler {
 		this.run();
 	}
 
+	async read_data_files() {
+		// wait for fast-glob to find our files...
+		let files = await fg(data_content_types, { cwd: this.config.dataDir });
+
+		// ...then read their contents
+		files = await all(
+			files.map(filepath => vfile.read(path.join(this.config.dataDir, filepath), 'utf8'))
+		);
+
+		// ...finally parse their contents
+		return files.map(file => parse_data(file));
+	}
+
+	async read_content_files() {
+		// wait for fast-glob to find our content files...
+		let entries = await fg(content_types, { cwd: this.config.contentDir });
+
+		// ...then read their contents
+		entries = await all(
+			entries.map(filepath => vfile.read(path.join(this.config.contentDir, filepath), 'utf8'))
+		);
+
+		// ...finally parse their content
+		return await all(entries.map(f => parse_content(f)));
+	}
+
 	async run() {
-		/*
-			1. Read the data files (from the `data` folder)
-			-----------------------------------------------------
-		 */
-		let data_files = // wait for all the files to be read
-		(await all(
-			// wait for fast-glob to find our files...
-			(await fg(data_content_types, { cwd: this.config.dataDir }))
-				// ...then read their contents
-				.map(filepath => vfile.read(path.join(this.config.dataDir, filepath), 'utf8'))
-		))
-			// ...then parse their contents
-			.map(file => parse_data(file));
+		let data_files = await this.read_data_files();
 
 		// populate this.data with the content of the data files.
-
 		let data = {};
 		data_files.forEach(f => (data[f.stem] = f.data));
 		this.data = data;
 
-		/*
-			2. Read the content files (from the `content` folder)
-			-----------------------------------------------------
-		 */
-		let entries =
-			// wait for all the entries to be parsed
-			await all(
-				// wait for the content of our files...
-				(await all(
-					// wait for fast-glob to find our content files...
-					(await fg(content_types, { cwd: this.config.contentDir }))
-						// ...then read their contents
-						.map(filepath =>
-							vfile.read(path.join(this.config.contentDir, filepath), 'utf8')
-						)
-				))
-					// then parse the content
-					.map(f => parse_content(f))
-			);
+		let entries = await this.read_content_files();
 
 		if (!inCwd(this.config.distDir)) {
 			throw Error(error_dist_dir(this.config.distDir));
