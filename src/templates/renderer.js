@@ -1,8 +1,8 @@
 const nunjucks = require('nunjucks');
 
 module.exports = config => {
-	nunjucks.configure(config.templateDir, {
+	let env = nunjucks.configure(config.templateDir, {
 		autoescape: false
 	});
-	return nunjucks;
+	return env;
 };
