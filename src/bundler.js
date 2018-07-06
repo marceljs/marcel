@@ -20,7 +20,6 @@ const Post = require('./models/post');
 
 class Bundler {
 	constructor() {
-		this.base = process.cwd();
 		this.config = config(this);
 		this.site = {
 			link: this.config.base
@@ -50,7 +49,9 @@ class Bundler {
 		await fs.emptyDir(this.config.distDir);
 
 		// Copy the `static` folder over to `dist`
-		fs.copy(this.config.staticDir, this.config.distDir);
+		if (fs.existsSync(this.config.staticDir)) {
+			fs.copy(this.config.staticDir, this.config.distDir);
+		}
 
 		// Render, and write to disk, the individual posts
 
