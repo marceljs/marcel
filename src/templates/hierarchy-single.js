@@ -4,12 +4,6 @@
 
 module.exports = (post, ext) => {
 	let templates = [];
-	if (post.layout) {
-		if (post.section !== 'default') {
-			templates.push(`single-${post.section}-${post.layout}.${ext}`);
-		}
-		templates.push(`single-${post.layout}.${ext}`);
-	}
 	if (post.type) {
 		if (post.section !== 'default') {
 			templates.push(`single-${post.section}-${post.type}.${ext}`);

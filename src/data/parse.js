@@ -29,7 +29,7 @@ module.exports = file => {
 	if (parser) {
 		file.data = parser(file.contents);
 	} else {
-		console.warn('Could not find appropriate parser for file');
+		throw new Error('Could not find appropriate parser for file.');
 	}
 	return file;
 };

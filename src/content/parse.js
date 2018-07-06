@@ -4,6 +4,7 @@ const frontmatter = require('remark-frontmatter');
 const parse_yaml = require('remark-parse-yaml');
 const html = require('remark-html');
 const visit = require('unist-util-visit');
+const split = require('markdown-split');
 
 const processor = remark()
 	.use(frontmatter)
