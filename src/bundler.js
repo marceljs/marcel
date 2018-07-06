@@ -42,6 +42,14 @@ class Bundler {
 
 		posts = posts.map(post => new Post(post));
 
+		// Add in the permalinks for the posts.
+		// TODO this weird way of doing it will probably
+		// need a refactor at some point.
+		// Re: https://github.com/marceljs/marcel/issues/39
+		posts.forEach(post => {
+			post.link = permalinks_single(post, this.config);
+		});
+
 		if (!inCwd(this.config.distDir)) {
 			throw Error(error_dist_dir(this.config.distDir));
 		}
@@ -62,8 +70,7 @@ class Bundler {
 				data: this.data
 			};
 			let html = render_single(this.renderer, context, this.config);
-			let permalink = permalinks_single(post, this.config);
-			this.write_page(permalink, html);
+			this.write_page(post.link, html);
 		});
 
 		// Render, and write to disk, post lists

@@ -1,6 +1,6 @@
-module.exports = function(list, site) {
+module.exports = function(list) {
 	if (list !== 'default') {
-		return `${list}`;
+		return `/${list}`;
 	}
 	return '';
 };

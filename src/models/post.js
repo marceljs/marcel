@@ -30,6 +30,12 @@ class Post {
 			this.section = 'default';
 		}
 
+		// This will be set up later, from the bundler
+		// TODO this weird way of doing it will probably
+		// need a refactor at some point.
+		// Re: https://github.com/marceljs/marcel/issues/39
+		this.link = null;
+
 		this.sections = sections;
 	}
 }
