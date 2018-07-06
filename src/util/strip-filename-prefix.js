@@ -12,4 +12,4 @@
 	Note: In the last example, you can work around the incorrect stripping
 	by defining a custom `slug` in the post's front-matter.
  */
-module.exports = filename => filename.replace(/^(\d+\-+)+/, '');
+module.exports = filename => filename.replace(/^(\d+\-*)+/, '');
