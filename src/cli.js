@@ -1,11 +1,10 @@
 require('v8-compile-cache');
-// const chalk = require('chalk');
-const program = require('commander'); // alternative: sade
-const version = require('../package.json').version;
+const program = require('commander');
+const pkg = require('../package.json');
 
 const Bundler = require('./bundler');
 
 const bundler = new Bundler();
 
-program.version(version);
+program.version(pkg.version);
 program.parse(process.argv);

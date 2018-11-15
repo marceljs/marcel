@@ -1,5 +1,6 @@
 const yaml = require('js-yaml');
 const { csvParse, tsvParse } = require('d3-dsv');
+const path = require('path');
 
 /*
 	From here: https://github.com/d3/d3-dsv
@@ -17,17 +18,21 @@ const { csvParse, tsvParse } = require('d3-dsv');
 const strip_bom = require('strip-bom');
 
 const parsers = {
-	'.ndtxt': content => content.split(/\n/),
-	'.json': content => JSON.parse(content),
-	'.yaml': content => yaml.safeLoad(content),
-	'.csv': content => csvParse(strip_bom(content)),
-	'.tsv': content => tsvParse(strip_bom(content))
+	'.ndtxt': file => file.contents.split(/\n/),
+	'.json': file => JSON.parse(file.contents),
+	'.yaml': file => yaml.safeLoad(file.contents),
+	'.csv': file => csvParse(strip_bom(file.contents)),
+	'.tsv': file => tsvParse(strip_bom(file.contents)),
+	'.js': async file => {
+		let module = require(path.resolve(file.cwd, file.path));
+		return typeof module === 'function' ? await module() : module;
+	}
 };
 
-module.exports = file => {
+module.exports = async file => {
 	let parser = parsers[file.extname];
 	if (parser) {
-		file.data = parser(file.contents);
+		file.data = await parser(file);
 	} else {
 		throw new Error('Could not find appropriate parser for file.');
 	}
