@@ -23,7 +23,8 @@ class Post {
 		this.directory = file.dirname;
 		this.filename = file.stem;
 		this.filename_slug =
-			slugify(strip_filename_prefix(this.filename)) || slugify(this.filename);
+			slugify(strip_filename_prefix(this.filename)) ||
+			slugify(this.filename);
 
 		this.section = this.directory.split(nodePath.sep)[0];
 		if (this.section === '.') {

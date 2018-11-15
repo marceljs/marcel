@@ -10,5 +10,9 @@ module.exports = (post, ext) => {
 		}
 		templates.push(`single-${post.type}.${ext}`);
 	}
-	return templates.concat([`single-${post.section}.${ext}`, `single.${ext}`, `index.${ext}`]);
+	return templates.concat([
+		`single-${post.section}.${ext}`,
+		`single.${ext}`,
+		`index.${ext}`
+	]);
 };

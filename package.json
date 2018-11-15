@@ -58,6 +58,6 @@
 		"tabWidth": 4,
 		"jsxBracketSameLine": false,
 		"arrowParens": "avoid",
-		"printWidth": 100
+		"printWidth": 80
 	}
 }

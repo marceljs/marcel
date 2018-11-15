@@ -11,6 +11,8 @@ module.exports = async cwd => {
 	let files = await fg('**/*.{js,json,yaml,csv,tsv,ndtxt}', { cwd });
 
 	return await Promise.all(
-		files.map(filepath => vfile.read({ path: filepath, cwd }, 'utf8').then(parse))
+		files.map(filepath =>
+			vfile.read({ path: filepath, cwd }, 'utf8').then(parse)
+		)
 	);
 };

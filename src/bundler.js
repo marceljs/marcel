@@ -89,7 +89,10 @@ class Bundler {
 	}
 
 	async write_page(permalink, content) {
-		fs.outputFile(path.join(this.config.distDir, permalink, 'index.html'), content);
+		fs.outputFile(
+			path.join(this.config.distDir, permalink, 'index.html'),
+			content
+		);
 	}
 }
 
