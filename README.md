@@ -26,3 +26,7 @@ I want to build a generator just the way I like it:
 Learn how to build a _fast_, _user-friendly_ static site generator that you can pick up quickly. It should be able to build most simple sites out of the box, with predictable results. For more complex tasks, a plugin system should make it easy to customize the various aspects of the pipeline.
 
 Document the thinking and the technical decisions, so that anyone who's interested can understand how to build such a tool.
+
+## Contributing
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md).
