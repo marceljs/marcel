@@ -19,15 +19,13 @@ const group_by = require('./util/group-by');
 const Post = require('./models/post');
 
 class Bundler {
-	constructor() {
-		this.config = config(this);
+	constructor(cfg) {
+		this.config = cfg;
 		this.site = {
 			link: this.config.base
 		};
 
 		this.renderer = renderer(this.config);
-
-		this.run();
 	}
 
 	async run() {

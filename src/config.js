@@ -10,7 +10,7 @@ const default_config = require('./defaults/default.config.js');
 
 const CONFIG_FILE_DEFAULT_PATH = 'marcel.config.js';
 
-module.exports = bundler => {
+module.exports = () => {
 	if (fs.existsSync(CONFIG_FILE_DEFAULT_PATH)) {
 		return deepmerge(
 			default_config,
