@@ -17,6 +17,7 @@
 		"chalk": "^2.4.1",
 		"commander": "^2.19.0",
 		"d3-dsv": "^1.0.10",
+		"dayjs": "^1.7.7",
 		"deepmerge": "^2.2.1",
 		"fast-glob": "^2.2.4",
 		"fs-extra": "^7.0.1",

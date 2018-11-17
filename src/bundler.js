@@ -2,6 +2,7 @@
 const fs = require('fs-extra');
 const path = require('path');
 const inCwd = require('is-path-in-cwd');
+const fg = require('fast-glob');
 
 // Modules
 const config = require('./config');
@@ -14,6 +15,7 @@ const permalinks_list = require('./permalinks/list');
 const read_data_files = require('./data/read');
 const read_content_files = require('./content/read');
 const group_by = require('./util/group-by');
+const add_async_filter = require('./util/add-async-filter');
 
 // Models
 const Post = require('./models/post');
@@ -29,6 +31,37 @@ class Bundler {
 	}
 
 	async run() {
+		/* 
+			Load filters
+			------------
+		*/
+
+		let default_filters = await fg('*.js', {
+			cwd: path.resolve(__dirname, 'filters')
+		}).then(filepaths =>
+			filepaths.map(filepath => ({
+				name: filepath.replace(/\.js$/, ''),
+				func: require(`./filters/${filepath}`)
+			}))
+		);
+
+		let custom_filters = await fg('*.js', {
+			cwd: this.config.filterDir
+		}).then(filepaths =>
+			filepaths.map(filepath => ({
+				name: filepath.replace(/\.js$/, ''),
+				func: require(path.resolve(
+					process.cwd(),
+					this.config.filterDir,
+					filepath
+				))
+			}))
+		);
+
+		default_filters
+			.concat(custom_filters)
+			.map(f => add_async_filter(this.renderer, f));
+
 		let data_files = await read_data_files(this.config.dataDir);
 
 		// populate this.data with the content of the data files.
