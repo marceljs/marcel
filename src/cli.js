@@ -10,16 +10,21 @@ const cfg = config();
 
 program.version(pkg.version);
 
-async function bundle() {
-	await new Bundler(cfg).run();
+async function bundle(options) {
+	await new Bundler(cfg).run({
+		drafts: options.drafts
+	});
 }
+
+program;
 
 program
 	.command('serve')
 	.description('Start a development server')
+	.option('-d, --drafts', 'Include drafts')
 	.option('--port [port]', 'port (default: 3000)')
 	.action(async function(options) {
-		await bundle();
+		await bundle(options);
 		const server = micro(async (req, res) => {
 			return handler(req, res, {
 				public: cfg.distDir
@@ -31,7 +36,8 @@ program
 	});
 
 program
-	.command('build', { isDefault: true })
+	.command('build')
+	.option('-d, --drafts', 'Include drafts')
 	.description('Build the website')
 	.action(bundle);
 

@@ -20,6 +20,11 @@ const add_async_filter = require('./util/add-async-filter');
 // Models
 const Post = require('./models/post');
 
+const default_options = {
+	// whether to include drafts in the build
+	drafts: false
+};
+
 class Bundler {
 	constructor(cfg) {
 		this.config = cfg;
@@ -30,7 +35,9 @@ class Bundler {
 		this.renderer = renderer(this.config);
 	}
 
-	async run() {
+	async run(opts) {
+		let options = Object.assign({}, default_options, opts);
+
 		/* 
 			Load filters
 			------------
@@ -69,19 +76,18 @@ class Bundler {
 		data_files.forEach(f => (data[f.stem] = f.data));
 		this.data = data;
 
-		let posts = await read_content_files(this.config.contentDir);
-
-		posts = posts.map(post => new Post(post));
-
-		// Add in the permalinks for the posts.
-		// TODO this weird way of doing it will probably
-		// need a refactor at some point.
-		// Re: https://github.com/marceljs/marcel/issues/39
+		let posts = (await read_content_files(this.config.contentDir)).map(
+			post => new Post(post)
+		);
 		posts.forEach(post => {
-			if (!post.permalink) {
+			if (post.permalink === undefined) {
 				post.permalink = permalinks_single(post, this.config);
 			}
 		});
+
+		posts = posts.filter(
+			post => post.permalink !== false && (!post.draft || options.drafts)
+		);
 
 		if (!inCwd(this.config.distDir)) {
 			throw Error(error_dist_dir(this.config.distDir));
