@@ -1,6 +1,6 @@
 # Marcel Changelog
 
-### Unreleased
+### 0.2.0
 
 -   Adds support for `.js` data files ([#42](https://github.com/marceljs/marcel/issues/42)).
 -   Adds `build` (default) and `serve` commands to the CLI ([#22](https://github.com/marceljs/marcel/issues/22)).
