@@ -61,29 +61,41 @@ class Bundler {
 
 		// Render, and write to disk, the individual posts
 
-		posts.forEach(post => {
-			let context = {
-				post,
-				site: this.site,
-				data: this.data
-			};
-			let html = render_single(this.renderer, context, this.config);
-			this.write_page(post.link, html);
-		});
+		await Promise.all(
+			posts.map(async post => {
+				let context = {
+					post,
+					site: this.site,
+					data: this.data
+				};
+				let html = await render_single(
+					this.renderer,
+					context,
+					this.config
+				);
+				this.write_page(post.link, html);
+			})
+		);
 
 		// Render, and write to disk, post lists
 		let sections = group_by(posts, post => post.section);
 
-		Object.keys(sections).forEach(section => {
-			let context = {
-				posts: sections[section],
-				site: this.site,
-				data: this.data
-			};
-			let html = render_list(this.renderer, context, this.config);
-			let permalink = permalinks_list(section, this.config);
-			this.write_page(permalink, html);
-		});
+		await Promise.all(
+			Object.keys(sections).map(async section => {
+				let context = {
+					posts: sections[section],
+					site: this.site,
+					data: this.data
+				};
+				let html = await render_list(
+					this.renderer,
+					context,
+					this.config
+				);
+				let permalink = permalinks_list(section, this.config);
+				this.write_page(permalink, html);
+			})
+		);
 	}
 
 	async write_page(permalink, content) {

@@ -21,9 +21,7 @@ program
 	.action(async function(options) {
 		await bundle();
 		const server = micro(async (req, res) => {
-			// todo build before
 			return handler(req, res, {
-				// todo get from marcel config
 				public: cfg.distDir
 			});
 		});
