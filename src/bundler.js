@@ -78,7 +78,9 @@ class Bundler {
 		// need a refactor at some point.
 		// Re: https://github.com/marceljs/marcel/issues/39
 		posts.forEach(post => {
-			post.link = permalinks_single(post, this.config);
+			if (!post.permalink) {
+				post.permalink = permalinks_single(post, this.config);
+			}
 		});
 
 		if (!inCwd(this.config.distDir)) {
@@ -106,7 +108,7 @@ class Bundler {
 					context,
 					this.config
 				);
-				this.write_page(post.link, html);
+				this.write_page(post.permalink, html);
 			})
 		);
 
@@ -115,6 +117,10 @@ class Bundler {
 
 		await Promise.all(
 			Object.keys(sections).map(async section => {
+				if (section === 'default') {
+					// don't render the default section list
+					return;
+				}
 				let context = {
 					posts: sections[section].sort((a, b) => a.date - b.date),
 					site: this.site,
@@ -132,10 +138,16 @@ class Bundler {
 	}
 
 	async write_page(permalink, content) {
-		fs.outputFile(
-			path.join(this.config.distDir, permalink, 'index.html'),
-			content
-		);
+		/*
+			If the permalink ends in '.html',
+			don't append the '/index.html' part.
+
+			This lets us write files like 404.html on the disk.
+		 */
+		let output_path = permalink.match(/\.html$/)
+			? permalink
+			: path.join(permalink, 'index.html');
+		fs.outputFile(path.join(this.config.distDir, output_path), content);
 	}
 }
 
