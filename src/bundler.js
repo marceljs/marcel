@@ -116,7 +116,7 @@ class Bundler {
 		await Promise.all(
 			Object.keys(sections).map(async section => {
 				let context = {
-					posts: sections[section],
+					posts: sections[section].sort((a, b) => a.date - b.date),
 					site: this.site,
 					data: this.data
 				};

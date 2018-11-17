@@ -4,15 +4,28 @@ const nodePath = require('path');
 const strip_filename_prefix = require('../util/strip-filename-prefix');
 
 class Post {
-	constructor({ data, content, file, sections }) {
-		// copy data over to the object
-		// TODO make sure none of the data overwrites any property or method
-		Object.assign(this, data);
+	constructor({ data, content, file }) {
+		/*
+			Copy over:
+			1. file stats (.date, .updated)
 
-		// ...and also make it available in .data
+			2. front-matter data 
+			(Might overwrite file stats; this is intentional)
+		 */
+		Object.assign(this, file.stats, data);
+
+		// Also make them available separately
 		this.data = data;
+		this.stats = file.stats;
 
 		// Populate content
+		if (this.content) {
+			console.warn(`
+				Found .content property in front-matter. 
+				It will be overwritten with the post's content.
+				You can read the front-matter value from: post.data.content
+			`);
+		}
 		this.content = content;
 
 		if (this.title) {
@@ -36,8 +49,6 @@ class Post {
 		// need a refactor at some point.
 		// Re: https://github.com/marceljs/marcel/issues/39
 		this.link = null;
-
-		this.sections = sections;
 	}
 }
 
