@@ -1,7 +1,4 @@
-const getPath = (o, path) =>
-	path
-		.split('.')
-		.reduce((res, prop) => (res !== undefined ? res[prop] : undefined), o);
+const getPath = require('../util/get-path');
 
 module.exports = function(collection, propPath) {
 	return collection

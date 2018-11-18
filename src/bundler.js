@@ -14,6 +14,8 @@ const permalinks_single = require('./permalinks/single');
 const permalinks_list = require('./permalinks/list');
 const data_read = require('./data/read');
 const content_read = require('./content/read');
+
+// Utils
 const group_by = require('./util/group-by');
 const add_async_filter = require('./util/add-async-filter');
 
@@ -102,24 +104,19 @@ class Bundler {
 		// Render post lists
 
 		let collections = (await Promise.all(
-			Object.keys(sections).map(async section => {
-				// don't render the default section list
-				return section === '__undefined__'
-					? null
-					: {
-							permalink: permalinks_list(section, this.config),
-							__rendered: await render_list(
-								this.renderer,
-								{
-									posts: sections[section].posts.sort(
-										(a, b) => a.date - b.date
-									),
-									site: this.site,
-									data: this.data
-								},
-								this.config
-							)
-					  };
+			lists.map(async list => {
+				return {
+					permalink: permalinks_list(list, this.config),
+					__rendered: await render_list(
+						this.renderer,
+						{
+							posts: list.posts.sort((a, b) => a.date - b.date),
+							site: this.site,
+							data: this.data
+						},
+						this.config
+					)
+				};
 			})
 		)).filter(c => c);
 

@@ -1,3 +1,5 @@
+const getPath = require('./get-path');
+
 module.exports = (posts = [], property) => {
 	let groups = {};
 
@@ -9,7 +11,7 @@ module.exports = (posts = [], property) => {
 	}
 
 	posts.forEach(post => {
-		let term = post[property];
+		let term = getPath(post, property);
 		if (Array.isArray(term)) {
 			term.forEach(t => add(t, post));
 		} else {
