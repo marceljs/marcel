@@ -7,7 +7,7 @@ module.exports = {
 	filterDir: 'filters',
 	base: '/',
 	templateExt: 'html',
-	taxonomies: [
+	lists: [
 		{
 			from: 'section',
 			include_undefined: false

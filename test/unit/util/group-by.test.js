@@ -2,7 +2,11 @@ const tape = require('tape');
 const groupby = require('../../src/util/group-by');
 
 tape('test section grouping', test => {
-	let posts = [{ id: 1, section: 'a' }, { id: 2, section: 'b' }, { id: 3, section: 'a' }];
+	let posts = [
+		{ id: 1, section: 'a' },
+		{ id: 2, section: 'b' },
+		{ id: 3, section: 'a' }
+	];
 
 	test.deepEqual(
 		groupby(posts, post => post.section),

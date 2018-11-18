@@ -45,7 +45,7 @@
 		"v8-compile-cache": "^2.0.2"
 	},
 	"scripts": {
-		"test": "tape test/**/*.test.js | tap-spec"
+		"test": "tape test/unit/**/*.test.js | tap-spec"
 	},
 	"husky": {
 		"hooks": {

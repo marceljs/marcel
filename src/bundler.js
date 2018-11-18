@@ -49,8 +49,6 @@ class Bundler {
 			{}
 		);
 
-		console.log(lists);
-
 		let posts = (await content_read(this.config.contentDir))
 			.map(p => {
 				let post = new Post(p);
@@ -64,7 +62,7 @@ class Bundler {
 					post.permalink !== false && (!post.draft || options.drafts)
 			);
 
-		let lists = this.config.taxonomies.reduce(
+		let lists = this.config.lists.reduce(
 			(res, t) =>
 				res.concat(
 					group_by(posts, t.from)
