@@ -1,8 +1,10 @@
 # marcel
 
-⚠️ Currently in the prototyping phase!
+<a href="https://www.npmjs.org/package/marcel"><img src="https://img.shields.io/npm/v/marcel.svg?style=flat" alt="npm version"></a>
 
 A simple, pluggable, static site generator built in JavaScript.
+
+> ⚠️ Marcel is currently in the prototyping phase!
 
 ## The name
 

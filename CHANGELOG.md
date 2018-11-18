@@ -1,5 +1,10 @@
 # Marcel Changelog
 
+### 0.3.0
+
+-   Adds support for taxonomies, changes the single/list template hierarchy.
+-   Write to file synchronously to make sure the order is deterministic.
+
 ### 0.2.1
 
 -   Fixes `v8-compile-cache` dependency.
