@@ -10,7 +10,7 @@ module.exports = (post, ext) => {
 	}
 
 	if (post.type) {
-		if (post.section !== 'default') {
+		if (post.section !== '__undefined__') {
 			templates.push(`single-${post.section}-${post.type}.${ext}`);
 		}
 		templates.push(`single-${post.type}.${ext}`);

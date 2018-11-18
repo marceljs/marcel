@@ -41,7 +41,7 @@ class Post {
 
 		this.section = this.directory.split(nodePath.sep)[0];
 		if (this.section === '.') {
-			this.section = 'default';
+			this.section = '__undefined__';
 		}
 	}
 }

@@ -7,6 +7,16 @@ module.exports = {
 	filterDir: 'filters',
 	base: '/',
 	templateExt: 'html',
+	taxonomies: [
+		{
+			from: 'section',
+			include_undefined: false
+		},
+		{
+			from: 'tags',
+			include_undefined: false
+		}
+	],
 	permalinks: {
 		// see the default permalink scheme in src/defaults/default.permalinks-single.js
 		single: (post, site) => false,

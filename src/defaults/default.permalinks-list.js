@@ -1,5 +1,5 @@
 module.exports = function(list) {
-	if (list !== 'default') {
+	if (list !== '__undefined__') {
 		return `/${list}`;
 	}
 	return '';
