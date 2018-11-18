@@ -168,7 +168,7 @@ class Bundler {
 		let output_path = permalink.match(/\.html$/)
 			? permalink
 			: path.join(permalink, 'index.html');
-		fs.outputFile(path.join(this.config.distDir, output_path), content);
+		fs.outputFileSync(path.join(this.config.distDir, output_path), content);
 	}
 
 	async load_filters() {
