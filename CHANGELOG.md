@@ -1,5 +1,9 @@
 # Marcel Changelog
 
+### 0.2.1
+
+-   Fixes `v8-compile-cache` dependency.
+
 ### 0.2.0
 
 -   Adds support for `.js` data files ([#42](https://github.com/marceljs/marcel/issues/42)).
