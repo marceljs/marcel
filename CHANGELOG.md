@@ -1,5 +1,9 @@
 # Marcel Changelog
 
+### Unreleased
+
+-   [CLI] Show help when no command has been invoked ([#44](https://github.com/marceljs/marcel/issues/44))
+
 ### 0.3.0
 
 -   Adds support for taxonomies, changes the single/list template hierarchy.
