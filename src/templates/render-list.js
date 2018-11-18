@@ -9,7 +9,7 @@ module.exports = async (list, renderer, context, config) => {
 			renderer.render(
 				template,
 				{
-					posts: list.posts,
+					posts: list.posts || [],
 					...context
 				},
 				(err, result) => {

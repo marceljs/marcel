@@ -53,7 +53,7 @@ class Bundler {
 
 		let posts = (await content_read(this.config.contentDir))
 			.map(p => {
-				let post = new Post(p);
+				let post = Post(p);
 				if (post.permalink === undefined) {
 					post.permalink = permalinks_single(post, this.config);
 				}
@@ -66,22 +66,32 @@ class Bundler {
 
 		let lists = this.config.lists.reduce((res, t) => {
 			let groups = group_by(posts, t.from);
+
+			function include_term(term) {
+				return t.include_undefined || term !== '__undefined__';
+			}
+
+			let list_index = List({
+				taxonomy: t.from,
+				terms: groups
+					.filter(item => include_term(item[0]) && item[1].length)
+					.map(item => item[0])
+			});
+
 			return res
-				.concat([
-					new List({
-						taxonomy: t.from,
-						terms: groups.map(item => item[0])
-					})
-				])
+				.concat(
+					t.include_index && list_index.terms.length
+						? [list_index]
+						: []
+				)
 				.concat(
 					groups
-						.map(
-							item =>
-								new List({
-									taxonomy: t.from,
-									term: item[0],
-									posts: item[1]
-								})
+						.map(item =>
+							List({
+								taxonomy: t.from,
+								term: item[0],
+								posts: item[1]
+							})
 						)
 						.filter(
 							l =>

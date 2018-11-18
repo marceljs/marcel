@@ -10,11 +10,13 @@ module.exports = {
 	lists: [
 		{
 			from: 'section',
+			include_index: false,
 			include_undefined: false
 		},
 		{
 			from: 'tags',
 			default_value: 'untagged',
+			include_index: true,
 			include_undefined: false
 		}
 	],
