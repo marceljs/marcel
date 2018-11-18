@@ -14,6 +14,7 @@ module.exports = {
 		},
 		{
 			from: 'tags',
+			default_value: 'untagged',
 			include_undefined: false
 		}
 	],

@@ -1,5 +1,5 @@
 const tape = require('tape');
-const strip = require('../../src/util/strip-filename-prefix');
+const strip = require('../../../src/util/strip-filename-prefix');
 
 tape('test filename stripping', test => {
 	test.equal(strip('1-hello'), 'hello', 'basic');

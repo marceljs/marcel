@@ -64,16 +64,23 @@ class Bundler {
 					post.permalink !== false && (!post.draft || options.drafts)
 			);
 
-		let lists = this.config.lists.reduce(
-			(res, t) =>
-				res.concat(
-					group_by(posts, t.from)
+		let lists = this.config.lists.reduce((res, t) => {
+			let groups = group_by(posts, t.from);
+			return res
+				.concat([
+					new List({
+						taxonomy: t.from,
+						terms: groups.map(item => item[0])
+					})
+				])
+				.concat(
+					groups
 						.map(
-							term =>
+							item =>
 								new List({
 									taxonomy: t.from,
-									term: term[0],
-									posts: term[1]
+									term: item[0],
+									posts: item[1]
 								})
 						)
 						.filter(
@@ -82,17 +89,16 @@ class Bundler {
 								(t.include__undefined ||
 									l.term !== '__undefined__')
 						)
-				),
-			[]
-		);
+				);
+		}, []);
 
 		// Render the individual posts
 		await Promise.all(
 			posts.map(async post => {
 				post.__rendered = await render_single(
+					post,
 					this.renderer,
 					{
-						post,
 						site: this.site,
 						data: this.data
 					},
@@ -108,9 +114,9 @@ class Bundler {
 				return {
 					permalink: permalinks_list(list, this.config),
 					__rendered: await render_list(
+						list,
 						this.renderer,
 						{
-							posts: list.posts.sort((a, b) => a.date - b.date),
 							site: this.site,
 							data: this.data
 						},
