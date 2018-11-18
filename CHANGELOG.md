@@ -3,6 +3,7 @@
 ### Unreleased
 
 -   [CLI] Show help when no command has been invoked ([#44](https://github.com/marceljs/marcel/issues/44))
+-   [CLI] Adds `--watch` option for `build`/`serve` ([#21](https://github.com/marceljs/marcel/issues/21))
 
 ### 0.3.0
 

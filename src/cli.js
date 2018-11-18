@@ -1,8 +1,10 @@
 require('v8-compile-cache');
 const program = require('commander');
-const pkg = require('../package.json');
 const handler = require('serve-handler');
 const micro = require('micro');
+const watch = require('glob-watcher');
+
+const pkg = require('../package.json');
 const Bundler = require('./bundler');
 const config = require('./config');
 
@@ -10,10 +12,27 @@ const cfg = config();
 
 program.version(pkg.version);
 
-async function bundle(options) {
+async function run(options) {
 	await new Bundler(cfg).run({
 		drafts: options.drafts
 	});
+}
+
+async function bundle(options) {
+	if (options.watch) {
+		watch(
+			'.',
+			{
+				ignored: [/node_modules/, cfg.distDir],
+				cwd: process.cwd()
+			},
+			() => {
+				console.log('Rebuilding');
+				return run(options);
+			}
+		);
+	}
+	run(options);
 }
 
 program;
@@ -21,6 +40,7 @@ program;
 program
 	.command('serve')
 	.description('Start a development server')
+	.option('-w, --watch', 'Watch for changes and rebuild')
 	.option('-d, --drafts', 'Include drafts')
 	.option('--port [port]', 'port (default: 3000)')
 	.action(async function(options) {
@@ -37,6 +57,7 @@ program
 
 program
 	.command('build')
+	.option('-w, --watch', 'Watch for changes and rebuild')
 	.option('-d, --drafts', 'Include drafts')
 	.description('Build the website')
 	.action(bundle);
