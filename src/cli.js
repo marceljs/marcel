@@ -41,4 +41,8 @@ program
 	.description('Build the website')
 	.action(bundle);
 
+if (process.argv.length < 3) {
+	program.outputHelp();
+}
+
 program.parse(process.argv);
