@@ -2,10 +2,23 @@
 	Template hierarchy for lists of posts
  */
 
-module.exports = (section, ext) => {
+module.exports = list => {
 	let templates = [];
-	if (section !== 'default') {
-		templates.push(`list-${section}.${ext}`);
+
+	if (list.taxonomy) {
+		if (list.taxonomy === 'section') {
+			if (list.term !== '__undefined__') {
+				templates.push(`list-${list.term}`);
+			}
+		} else {
+			if (list.term !== undefined) {
+				templates.push(`list-${list.taxonomy}-${list.term}`);
+			} else {
+				templates.push(`list-${list.taxonomy}-index`);
+			}
+			templates.push(`list-${list.taxonomy}`);
+		}
 	}
-	return templates.concat([`list.${ext}`, `index.${ext}`]);
+
+	return templates.concat([`list`, `index`]);
 };

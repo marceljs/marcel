@@ -45,7 +45,7 @@
 		"tape": "^4.9.1"
 	},
 	"scripts": {
-		"test": "tape test/**/*.test.js | tap-spec"
+		"test": "tape test/unit/**/*.test.js | tap-spec"
 	},
 	"husky": {
 		"hooks": {

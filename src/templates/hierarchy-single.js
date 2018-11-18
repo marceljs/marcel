@@ -2,7 +2,7 @@
 	Template hierarchy for single posts
  */
 
-module.exports = (post, ext) => {
+module.exports = post => {
 	let templates = [];
 
 	if (post.template) {
@@ -10,14 +10,15 @@ module.exports = (post, ext) => {
 	}
 
 	if (post.type) {
-		if (post.section !== 'default') {
-			templates.push(`single-${post.section}-${post.type}.${ext}`);
+		if (post.section && post.section !== '__undefined__') {
+			templates.push(`single-${post.section}-${post.type}`);
 		}
-		templates.push(`single-${post.type}.${ext}`);
+		templates.push(`single-${post.type}`);
 	}
-	return templates.concat([
-		`single-${post.section}.${ext}`,
-		`single.${ext}`,
-		`index.${ext}`
-	]);
+
+	if (post.section && post.section !== '__undefined__') {
+		templates.push(`single-${post.section}`);
+	}
+
+	return templates.concat([`single`, `index`]);
 };

@@ -1,11 +1,23 @@
-module.exports = (list, getter) => {
+const getPath = require('./get-path');
+
+module.exports = (posts = [], property) => {
 	let groups = {};
-	list.forEach(item => {
-		let key = getter(item);
-		if (!groups[key]) {
-			groups[key] = [];
+
+	function add(term = '__undefined__', post) {
+		if (!groups[term]) {
+			groups[term] = [];
 		}
-		groups[key].push(item);
+		groups[term].push(post);
+	}
+
+	posts.forEach(post => {
+		let term = getPath(post, property);
+		if (Array.isArray(term)) {
+			term.forEach(t => add(t, post));
+		} else {
+			add(term, post);
+		}
 	});
-	return groups;
+
+	return Object.entries(groups);
 };
