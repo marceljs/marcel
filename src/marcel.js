@@ -3,32 +3,35 @@ const fs = require('fs-extra');
 const path = require('path');
 const in_cwd = require('is-path-in-cwd');
 const fg = require('fast-glob');
+const vfile = require('to-vfile');
 
 // Modules
-const config = require('./config');
 const renderer = require('./templates/renderer');
 const render_single = require('./templates/render-single');
 const render_list = require('./templates/render-list');
-const error_dist_dir = require('./errors/dist-dir');
-const permalinks_single = require('./permalinks/single');
-const permalinks_list = require('./permalinks/list');
-const data_read = require('./data/read');
-const content_read = require('./content/read');
+const permalinks_list = require('./permalinks-list');
 
 // Utils
 const group_by = require('./util/group-by');
-const add_async_filter = require('./util/add-async-filter');
+const add_async_filter = require('./templates/add-async-filter');
+const from_entries = require('./util/from-entries');
+
+const read_files = require('./pipeline/read-files');
 
 // Models
-const Post = require('./models/post');
-const List = require('./models/list');
+const List = require('./list');
+
+const data_extensions = ['js', 'json', 'yaml', 'csv', 'tsv', 'ndtxt'];
 
 const default_options = {
 	// whether to include drafts in the build
 	drafts: false
 };
 
-class Bundler {
+const noDrafts = post =>
+	post.permalink !== false && (!post.draft || options.drafts);
+
+module.exports = class Marcel {
 	constructor(cfg) {
 		this.config = cfg;
 		this.site = {
@@ -46,23 +49,29 @@ class Bundler {
 
 		await this.load_filters();
 
-		this.data = (await data_read(this.config.dataDir)).reduce(
-			(res, f) => ((res[f.stem] = f.data), res),
-			{}
+		this.data = from_entries(
+			(await Promise.all(
+				(await read_files(
+					`**/*.{${data_extensions.join(',')}}`,
+					this.config.dataDir
+				)).map(({ path, cwd }) =>
+					vfile
+						.read({ path, cwd }, 'utf8')
+						.then(require('./pipeline/parse-data'))
+				)
+			)).map(f => [f.stem, f.data])
 		);
 
-		let posts = (await content_read(this.config.contentDir))
-			.map(p => {
-				let post = Post(p);
-				if (post.permalink === undefined) {
-					post.permalink = permalinks_single(post, this.config);
-				}
-				return post;
-			})
-			.filter(
-				post =>
-					post.permalink !== false && (!post.draft || options.drafts)
-			);
+		let posts = (await Promise.all(
+			(await read_files('**/*.md', this.config.contentDir)).map(
+				({ path, cwd }) =>
+					vfile
+						.read({ path, cwd }, 'utf8')
+						.then(require('./pipeline/file-stats'))
+						.then(require('./pipeline/parse-md'))
+						.then(require('./pipeline/to-post')(this.config))
+			)
+		)).filter(noDrafts);
 
 		let lists = this.config.lists.reduce((res, t) => {
 			let groups = group_by(posts, t.from);
@@ -137,7 +146,14 @@ class Bundler {
 		)).filter(c => c);
 
 		if (!in_cwd(this.config.distDir)) {
-			throw Error(error_dist_dir(this.config.distDir));
+			throw new Error(`
+				---
+				Configuration error!
+				distDir: ${this.config.distDir} is outside the current working directory.
+				To avoid deleting things accidentally due to misconfiguration,
+				such a path is not currently supported, sorry.
+				---
+			`);
 		}
 
 		/*
@@ -198,6 +214,4 @@ class Bundler {
 			.concat(custom_filters)
 			.map(f => add_async_filter(this.renderer, f));
 	}
-}
-
-module.exports = Bundler;
+};

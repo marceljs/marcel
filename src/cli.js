@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 require('v8-compile-cache');
 const program = require('commander');
 const handler = require('serve-handler');
@@ -5,20 +6,19 @@ const micro = require('micro');
 const watch = require('glob-watcher');
 
 const pkg = require('../package.json');
-const Bundler = require('./bundler');
+const Marcel = require('./marcel');
 const config = require('./config');
-
-const cfg = config();
 
 program.version(pkg.version);
 
-async function run(options) {
-	await new Bundler(cfg).run({
+async function run(cfg, options) {
+	await new Marcel(cfg).run({
 		drafts: options.drafts
 	});
 }
 
 async function bundle(options) {
+	let cfg = await config();
 	if (options.watch) {
 		watch(
 			'.',
@@ -28,11 +28,11 @@ async function bundle(options) {
 			},
 			() => {
 				console.log('Rebuilding');
-				return run(options);
+				return run(cfg, options);
 			}
 		);
 	}
-	run(options);
+	run(cfg, options);
 }
 
 program;
@@ -44,6 +44,7 @@ program
 	.option('-d, --drafts', 'Include drafts')
 	.option('--port [port]', 'port (default: 3000)')
 	.action(async function(options) {
+		let cfg = await config();
 		await bundle(options);
 		const server = micro(async (req, res) => {
 			return handler(req, res, {
