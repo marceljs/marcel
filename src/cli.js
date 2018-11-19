@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 require('v8-compile-cache');
 const program = require('commander');
 const handler = require('serve-handler');
@@ -5,13 +6,13 @@ const micro = require('micro');
 const watch = require('glob-watcher');
 
 const pkg = require('../package.json');
-const Bundler = require('./bundler');
+const Marcel = require('./marcel');
 const config = require('./config');
 
 program.version(pkg.version);
 
 async function run(cfg, options) {
-	await new Bundler(cfg).run({
+	await new Marcel(cfg).run({
 		drafts: options.drafts
 	});
 }

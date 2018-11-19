@@ -4,7 +4,7 @@ const vfile = require('to-vfile');
 const supported_extensions = ['js', 'json', 'yaml', 'csv', 'tsv', 'ndtxt'];
 
 const parsers = supported_extensions.reduce((res, ext) => {
-	res['.' + ext] = require(`../parse/parse-${ext}`);
+	res['.' + ext] = require(`./parse/parse-${ext}`);
 	return res;
 }, {});
 

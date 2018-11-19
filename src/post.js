@@ -1,7 +1,7 @@
 const slugify = require('@sindresorhus/slugify');
 const nodePath = require('path');
 
-const strip_filename_prefix = require('../util/strip-filename-prefix');
+const strip_filename_prefix = require('./util/strip-filename-prefix');
 
 module.exports = function(attrs) {
 	let { file, data, content } = attrs;

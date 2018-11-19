@@ -2,12 +2,12 @@
 	"name": "marcel",
 	"version": "0.3.0",
 	"description": "A simple, pluggable, static site generator.",
-	"main": "index.js",
+	"main": "src/marcel.js",
 	"repository": "git@github.com:marceljs/marcel.git",
 	"author": "Dan Burzo <danburzo@gmail.com>",
 	"license": "MIT",
 	"bin": {
-		"marcel": "bin/cli.js"
+		"marcel": "src/cli.js"
 	},
 	"engines": {
 		"node": ">= 8.0.0"

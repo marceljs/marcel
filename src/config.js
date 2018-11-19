@@ -6,7 +6,7 @@ const fs = require('fs');
 const path = require('path');
 const deepmerge = require('deepmerge');
 
-const default_config = require('./defaults/default.config.js');
+const default_config = require('./default.config.js');
 
 const CONFIG_FILE_DEFAULT_PATH = 'marcel.config.js';
 

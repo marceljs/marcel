@@ -2,7 +2,7 @@ const fs = require('fs-extra');
 const fg = require('fast-glob');
 const path = require('path');
 const vfile = require('to-vfile');
-const parse = require('../parse/parse-md');
+const parse = require('./parse/parse-md');
 
 module.exports = async cwd =>
 	await Promise.all(

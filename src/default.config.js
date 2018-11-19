@@ -21,10 +21,10 @@ module.exports = {
 		}
 	],
 	permalinks: {
-		// see the default permalink scheme in src/defaults/default.permalinks-single.js
+		// see the default permalink scheme in src/default.permalinks-single.js
 		single: (post, site) => false,
 
-		// see the default permalink scheme in src/defaults/default.permalinks-list.js
+		// see the default permalink scheme in src/default.permalinks-list.js
 		list: (list, site) => false
 	}
 };

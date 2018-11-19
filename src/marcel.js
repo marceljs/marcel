@@ -8,26 +8,25 @@ const fg = require('fast-glob');
 const renderer = require('./templates/renderer');
 const render_single = require('./templates/render-single');
 const render_list = require('./templates/render-list');
-const error_dist_dir = require('./errors/dist-dir');
-const permalinks_single = require('./permalinks/single');
-const permalinks_list = require('./permalinks/list');
-const data_read = require('./data/read');
-const content_read = require('./content/read');
+const permalinks_single = require('./permalinks-single');
+const permalinks_list = require('./permalinks-list');
+const data_read = require('./data');
+const content_read = require('./content');
 
 // Utils
 const group_by = require('./util/group-by');
-const add_async_filter = require('./util/add-async-filter');
+const add_async_filter = require('./templates/add-async-filter');
 
 // Models
-const Post = require('./models/post');
-const List = require('./models/list');
+const Post = require('./post');
+const List = require('./list');
 
 const default_options = {
 	// whether to include drafts in the build
 	drafts: false
 };
 
-class Bundler {
+module.exports = class Marcel {
 	constructor(cfg) {
 		this.config = cfg;
 		this.site = {
@@ -136,7 +135,14 @@ class Bundler {
 		)).filter(c => c);
 
 		if (!in_cwd(this.config.distDir)) {
-			throw Error(error_dist_dir(this.config.distDir));
+			throw new Error(`
+				---
+				Configuration error!
+				distDir: ${this.config.distDir} is outside the current working directory.
+				To avoid deleting things accidentally due to misconfiguration,
+				such a path is not currently supported, sorry.
+				---
+			`);
 		}
 
 		/*
@@ -197,6 +203,4 @@ class Bundler {
 			.concat(custom_filters)
 			.map(f => add_async_filter(this.renderer, f));
 	}
-}
-
-module.exports = Bundler;
+};
