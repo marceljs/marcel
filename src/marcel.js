@@ -3,23 +3,22 @@ const fs = require('fs-extra');
 const path = require('path');
 const in_cwd = require('is-path-in-cwd');
 const fg = require('fast-glob');
+const vfile = require('to-vfile');
 
 // Modules
 const renderer = require('./templates/renderer');
 const render_single = require('./templates/render-single');
 const render_list = require('./templates/render-list');
-const permalinks_single = require('./permalinks-single');
 const permalinks_list = require('./permalinks-list');
-
-const parse_markdown = require('./parse/parse-md');
 
 // Utils
 const group_by = require('./util/group-by');
 const add_async_filter = require('./templates/add-async-filter');
-const read_files = require('./util/read-files');
+const from_entries = require('./util/from-entries');
+
+const read_files = require('./pipeline/read-files');
 
 // Models
-const Post = require('./post');
 const List = require('./list');
 
 const data_extensions = ['js', 'json', 'yaml', 'csv', 'tsv', 'ndtxt'];
@@ -28,6 +27,9 @@ const default_options = {
 	// whether to include drafts in the build
 	drafts: false
 };
+
+const noDrafts = post =>
+	post.permalink !== false && (!post.draft || options.drafts);
 
 module.exports = class Marcel {
 	constructor(cfg) {
@@ -47,32 +49,29 @@ module.exports = class Marcel {
 
 		await this.load_filters();
 
-		this.data = (await Promise.all(
-			(await read_files(
-				`**/*.{${data_extensions.join(',')}}`,
-				this.config.dataDir
-			)).map(file =>
-				require(`./parse/parse-${file.extname.slice(1)}`)(file)
-			)
-		)).reduce((res, f) => ((res[f.stem] = f.data), res), {});
+		this.data = from_entries(
+			(await Promise.all(
+				(await read_files(
+					`**/*.{${data_extensions.join(',')}}`,
+					this.config.dataDir
+				)).map(({ path, cwd }) =>
+					vfile
+						.read({ path, cwd }, 'utf8')
+						.then(require('./pipeline/parse-data'))
+				)
+			)).map(f => [f.stem, f.data])
+		);
 
 		let posts = (await Promise.all(
-			(await read_files('**/*.md', this.config.contentDir)).map(file => {
-				file.stats = (stats => ({
-					date: new Date(stats.birthtimeMs),
-					updated: new Date(stats.mtimeMs)
-				}))(fs.statSync(path.resolve(file.cwd, file.path)));
-				return parse_markdown(file).then(p => {
-					let post = Post(p);
-					if (post.permalink === undefined) {
-						post.permalink = permalinks_single(post, this.config);
-					}
-					return post;
-				});
-			})
-		)).filter(
-			post => post.permalink !== false && (!post.draft || options.drafts)
-		);
+			(await read_files('**/*.md', this.config.contentDir)).map(
+				({ path, cwd }) =>
+					vfile
+						.read({ path, cwd }, 'utf8')
+						.then(require('./pipeline/file-stats'))
+						.then(require('./pipeline/parse-md'))
+						.then(require('./pipeline/to-post')(this.config))
+			)
+		)).filter(noDrafts);
 
 		let lists = this.config.lists.reduce((res, t) => {
 			let groups = group_by(posts, t.from);
