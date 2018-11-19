@@ -10,16 +10,19 @@ const render_single = require('./templates/render-single');
 const render_list = require('./templates/render-list');
 const permalinks_single = require('./permalinks-single');
 const permalinks_list = require('./permalinks-list');
-const data_read = require('./data');
-const content_read = require('./content');
+
+const parse_markdown = require('./parse/parse-md');
 
 // Utils
 const group_by = require('./util/group-by');
 const add_async_filter = require('./templates/add-async-filter');
+const read_files = require('./util/read-files');
 
 // Models
 const Post = require('./post');
 const List = require('./list');
+
+const data_extensions = ['js', 'json', 'yaml', 'csv', 'tsv', 'ndtxt'];
 
 const default_options = {
 	// whether to include drafts in the build
@@ -44,23 +47,32 @@ module.exports = class Marcel {
 
 		await this.load_filters();
 
-		this.data = (await data_read(this.config.dataDir)).reduce(
-			(res, f) => ((res[f.stem] = f.data), res),
-			{}
-		);
+		this.data = (await Promise.all(
+			(await read_files(
+				`**/*.{${data_extensions.join(',')}}`,
+				this.config.dataDir
+			)).map(file =>
+				require(`./parse/parse-${file.extname.slice(1)}`)(file)
+			)
+		)).reduce((res, f) => ((res[f.stem] = f.data), res), {});
 
-		let posts = (await content_read(this.config.contentDir))
-			.map(p => {
-				let post = Post(p);
-				if (post.permalink === undefined) {
-					post.permalink = permalinks_single(post, this.config);
-				}
-				return post;
+		let posts = (await Promise.all(
+			(await read_files('**/*.md', this.config.contentDir)).map(file => {
+				file.stats = (stats => ({
+					date: new Date(stats.birthtimeMs),
+					updated: new Date(stats.mtimeMs)
+				}))(fs.statSync(path.resolve(file.cwd, file.path)));
+				return parse_markdown(file).then(p => {
+					let post = Post(p);
+					if (post.permalink === undefined) {
+						post.permalink = permalinks_single(post, this.config);
+					}
+					return post;
+				});
 			})
-			.filter(
-				post =>
-					post.permalink !== false && (!post.draft || options.drafts)
-			);
+		)).filter(
+			post => post.permalink !== false && (!post.draft || options.drafts)
+		);
 
 		let lists = this.config.lists.reduce((res, t) => {
 			let groups = group_by(posts, t.from);
