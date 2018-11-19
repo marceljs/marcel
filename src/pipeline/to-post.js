@@ -1,7 +1,7 @@
 const permalinks_single = require('../permalinks-single');
 
-module.exports = config => p => {
-	let post = require('../post')(p);
+module.exports = config => file => {
+	let post = require('../post')(file);
 	if (post.permalink === undefined) {
 		post.permalink = permalinks_single(post, config);
 	}

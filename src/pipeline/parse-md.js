@@ -17,10 +17,7 @@ module.exports = async file => {
 	visit(tree, 'yaml', item => {
 		data = { ...data, ...item.data.parsedValue };
 	});
-	let content = await processor.stringify(tree);
-	return {
-		file,
-		data,
-		content
-	};
+	file.data = data;
+	file.parsedContent = await processor.stringify(tree);
+	return file;
 };
