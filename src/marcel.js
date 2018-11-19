@@ -16,7 +16,7 @@ const group_by = require('./util/group-by');
 const add_async_filter = require('./templates/add-async-filter');
 const from_entries = require('./util/from-entries');
 
-const read_files = require('./pipeline/read-files');
+const read = require('./pipeline/read');
 
 // Models
 const List = require('./list');
@@ -51,7 +51,7 @@ module.exports = class Marcel {
 
 		this.data = from_entries(
 			(await Promise.all(
-				(await read_files(
+				(await read(
 					`**/*.{${data_extensions.join(',')}}`,
 					this.config.dataDir
 				)).map(({ path, cwd }) =>
@@ -63,7 +63,7 @@ module.exports = class Marcel {
 		);
 
 		let posts = (await Promise.all(
-			(await read_files('**/*.md', this.config.contentDir)).map(
+			(await read('**/*.md', this.config.contentDir)).map(
 				({ path, cwd }) =>
 					vfile
 						.read({ path, cwd }, 'utf8')
@@ -188,26 +188,19 @@ module.exports = class Marcel {
 	}
 
 	async load_filters() {
-		let default_filters = await fg('*.js', {
-			cwd: path.resolve(__dirname, 'filters')
-		}).then(filepaths =>
-			filepaths.map(filepath => ({
-				name: filepath.replace(/\.js$/, ''),
-				func: require(`./filters/${filepath}`)
-			}))
-		);
+		let default_filters = (await read(
+			'*.js',
+			path.resolve(__dirname, 'filters')
+		)).map(({ path: filepath, cwd }) => ({
+			name: filepath.replace(/\.js$/, ''),
+			func: require(`./filters/${filepath}`)
+		}));
 
-		let custom_filters = await fg('*.js', {
-			cwd: this.config.filterDir
-		}).then(filepaths =>
-			filepaths.map(filepath => ({
+		let custom_filters = (await read('*.js', this.config.filterDir)).map(
+			({ path: filepath, cwd }) => ({
 				name: filepath.replace(/\.js$/, ''),
-				func: require(path.resolve(
-					process.cwd(),
-					this.config.filterDir,
-					filepath
-				))
-			}))
+				func: require(path.resolve(process.cwd(), cwd, filepath))
+			})
 		);
 
 		default_filters
