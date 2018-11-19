@@ -5,7 +5,6 @@ const in_cwd = require('is-path-in-cwd');
 const fg = require('fast-glob');
 
 // Modules
-const config = require('./config');
 const renderer = require('./templates/renderer');
 const render_single = require('./templates/render-single');
 const render_list = require('./templates/render-list');
