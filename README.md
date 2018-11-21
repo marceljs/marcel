@@ -32,3 +32,12 @@ Document the thinking and the technical decisions, so that anyone who's interest
 ## Contributing
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md).
+
+## Related projects
+
+Some projects that have similar aims to Marcel:
+
+-   [Jekyll](https://jekyllrb.com/) (Ruby)
+-   [Hugo](https://gohugo.io/) (Go)
+-   [Eleventy](https://11ty.io) (JS)
+-   [Zola](https://getzola.org/) (Rust)
