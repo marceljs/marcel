@@ -23,6 +23,7 @@ module.exports = {
 			include_undefined: false
 		}
 	],
+	plugins: [],
 	permalinks: {
 		// see the default permalink scheme in src/default.permalinks-single.js
 		single: (post, site) => false,
