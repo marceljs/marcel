@@ -11,6 +11,8 @@ const render_single = require('./templates/render-single');
 const render_list = require('./templates/render-list');
 const permalinks_list = require('./permalinks-list');
 
+const markdown_parser = require('./pipeline/parse-md');
+
 // Utils
 const group_by = require('./util/group-by');
 const add_async_filter = require('./templates/add-async-filter');
@@ -65,13 +67,15 @@ module.exports = class Marcel {
 			)).map(f => [f.stem, f.data])
 		);
 
+		let parser = markdown_parser(this.config);
+
 		let posts = (await Promise.all(
 			(await read('**/*.md', this.config.contentDir)).map(
 				({ path, cwd }) =>
 					vfile
 						.read({ path, cwd }, 'utf8')
 						.then(require('./pipeline/file-stats'))
-						.then(require('./pipeline/parse-md'))
+						.then(parser)
 						.then(require('./pipeline/to-post')(this.config))
 			)
 		)).filter(noDrafts);
