@@ -11,7 +11,7 @@ module.exports = function(file) {
 		...data.frontmatter,
 		data: data.frontmatter,
 		stats: data.stats,
-		content: data.content,
+		content: file.contents,
 		title_slug: data.title ? slugify(data.title) : undefined,
 		path: file.path,
 		directory: file.dirname,
