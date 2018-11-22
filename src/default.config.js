@@ -4,7 +4,10 @@ module.exports = {
 	templateDir: 'templates',
 	staticDir: 'static',
 	distDir: 'dist',
-	filters: {},
+	filters: {
+		format_date: require('./filters/format_date'),
+		sort_by: require('./filters/sort_by')
+	},
 	base: '/',
 	templateExt: 'html',
 	lists: [

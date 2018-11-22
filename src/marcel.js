@@ -47,7 +47,10 @@ module.exports = class Marcel {
 			...opts
 		};
 
-		await this.load_filters();
+		// Load filters into Nunjucks
+		Object.keys(this.config.filters).forEach(name =>
+			add_async_filter(this.renderer, name, this.config.filters[name])
+		);
 
 		this.data = from_entries(
 			(await Promise.all(
@@ -185,21 +188,5 @@ module.exports = class Marcel {
 			? permalink
 			: path.join(permalink, 'index.html');
 		fs.outputFileSync(path.join(this.config.distDir, output_path), content);
-	}
-
-	async load_filters() {
-		// default filters
-		(await read('*.js', path.resolve(__dirname, 'filters'))).forEach(f =>
-			add_async_filter(
-				this.renderer,
-				f.path.replace(/\.js$/, ''),
-				require(`./filters/${f.path}`)
-			)
-		);
-
-		// custom filters
-		Object.keys(this.config.filters).forEach(name =>
-			add_async_filter(this.renderer, name, this.config.filters[name])
-		);
 	}
 };
