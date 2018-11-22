@@ -10,17 +10,19 @@ const processor = unified()
 	.use(parse)
 	.use(frontmatter)
 	.use(parseFrontmatter)
+	.use(() => (ast, file) => {
+		visit(ast, 'yaml', item => {
+			file.data.frontmatter = item.data.parsedValue;
+		});
+	})
 	.use(mdToHtml)
 	.use(html);
 
 module.exports = async file => {
-	let ast = await processor.parse(file);
-
-	visit(ast, 'yaml', item => {
-		console.log(item);
-	});
-
 	let parsed = await processor.process(file);
-	file.parsedContent = parsed.contents;
+	file.data = {
+		...file.data,
+		content: parsed.contents
+	};
 	return file;
 };

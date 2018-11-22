@@ -4,14 +4,14 @@ const nodePath = require('path');
 const strip_filename_prefix = require('./util/strip-filename-prefix');
 
 module.exports = function(file) {
-	let { data, parsedContent } = file;
+	let { data } = file;
 
 	let res = {
-		...file.stats,
-		...data,
-		data: data,
-		stats: file.stats,
-		content: parsedContent,
+		...data.stats,
+		...data.frontmatter,
+		data: data.frontmatter,
+		stats: data.stats,
+		content: data.content,
 		title_slug: data.title ? slugify(data.title) : undefined,
 		path: file.path,
 		directory: file.dirname,
