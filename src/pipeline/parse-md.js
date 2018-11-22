@@ -1,23 +1,28 @@
-// Libs
-const remark = require('remark');
+const unified = require('unified');
+const parse = require('remark-parse');
 const frontmatter = require('remark-frontmatter');
-const parse_yaml = require('remark-parse-yaml');
-const html = require('remark-html');
+const parseFrontmatter = require('remark-parse-yaml');
+const mdToHtml = require('remark-rehype');
+const html = require('rehype-stringify');
 const visit = require('unist-util-visit');
-const split = require('markdown-split');
 
-const processor = remark()
+const processor = unified()
+	.use(parse)
 	.use(frontmatter)
-	.use(parse_yaml)
+	.use(parseFrontmatter)
+	.use(() => (ast, file) => {
+		visit(ast, 'yaml', item => {
+			file.data.frontmatter = item.data.parsedValue;
+		});
+	})
+	.use(mdToHtml)
 	.use(html);
 
 module.exports = async file => {
-	let tree = await processor.run(processor.parse(file));
-	let data = {};
-	visit(tree, 'yaml', item => {
-		data = { ...data, ...item.data.parsedValue };
-	});
-	file.data = data;
-	file.parsedContent = await processor.stringify(tree);
+	let parsed = await processor.process(file);
+	file.data = {
+		...file.data,
+		content: parsed.contents
+	};
 	return file;
 };
