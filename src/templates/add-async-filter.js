@@ -1,16 +1,15 @@
-module.exports = (renderer, filter) => {
+module.exports = (renderer, name, func) => {
 	renderer.addFilter(
-		filter.name,
+		name,
 		async function() {
 			let args = Array.from(arguments);
 			let callback = args.pop();
 			try {
-				let res = await filter.func(...args);
-				callback(null, res);
+				callback(null, await func(...args));
 			} catch (err) {
 				callback(err);
 			}
 		},
-		true
+		true // async
 	);
 };

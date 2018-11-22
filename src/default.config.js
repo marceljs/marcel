@@ -4,7 +4,7 @@ module.exports = {
 	templateDir: 'templates',
 	staticDir: 'static',
 	distDir: 'dist',
-	filterDir: 'filters',
+	filters: {},
 	base: '/',
 	templateExt: 'html',
 	lists: [

@@ -4,6 +4,7 @@
 
 -   [CLI] Show help when no command has been invoked ([#44](https://github.com/marceljs/marcel/issues/44))
 -   [CLI] Adds `--watch` option for `build`/`serve` ([#21](https://github.com/marceljs/marcel/issues/21))
+-   Custom filters are now loaded from the `filters` option in the config file, rather than from individual files on disk. This makes the feature more flexible, allowing npm packages, etc.
 
 ### 0.3.0
 

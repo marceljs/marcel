@@ -188,23 +188,18 @@ module.exports = class Marcel {
 	}
 
 	async load_filters() {
-		let default_filters = (await read(
-			'*.js',
-			path.resolve(__dirname, 'filters')
-		)).map(({ path: filepath, cwd }) => ({
-			name: filepath.replace(/\.js$/, ''),
-			func: require(`./filters/${filepath}`)
-		}));
-
-		let custom_filters = (await read('*.js', this.config.filterDir)).map(
-			({ path: filepath, cwd }) => ({
-				name: filepath.replace(/\.js$/, ''),
-				func: require(path.resolve(process.cwd(), cwd, filepath))
-			})
+		// default filters
+		(await read('*.js', path.resolve(__dirname, 'filters'))).forEach(f =>
+			add_async_filter(
+				this.renderer,
+				f.path.replace(/\.js$/, ''),
+				require(`./filters/${f.path}`)
+			)
 		);
 
-		default_filters
-			.concat(custom_filters)
-			.map(f => add_async_filter(this.renderer, f));
+		// custom filters
+		Object.keys(this.config.filters).forEach(name =>
+			add_async_filter(this.renderer, name, this.config.filters[name])
+		);
 	}
 };
