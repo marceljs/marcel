@@ -21,6 +21,7 @@ module.exports = (cfg = {}) => {
 	let plugins = cfg.plugins || [];
 
 	let mdast_phase_plugins = plugins.map(p => p.onmdast).filter(f => f);
+	let hast_phase_plugins = plugins.map(p => p.onhast).filter(f => f);
 
 	const processor = unified()
 		.use(parse)
@@ -28,6 +29,7 @@ module.exports = (cfg = {}) => {
 		.use(mdast_phase_plugins)
 		.use(mdToHtml, { allowDangerousHTML: true })
 		.use(raw)
+		.use(hast_phase_plugins)
 		.use(html);
 	return async file => {
 		let parsed = await processor.process(file);
@@ -35,7 +37,6 @@ module.exports = (cfg = {}) => {
 			...file.data,
 			content: parsed.contents
 		};
-		console.log(file.data);
 		return file;
 	};
 };
