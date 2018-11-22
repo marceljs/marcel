@@ -6,6 +6,26 @@ const mdToHtml = require('remark-rehype');
 const raw = require('rehype-raw');
 const html = require('rehype-stringify');
 const visit = require('unist-util-visit');
+const strip = require('strip-markdown');
+const map_ast = require('unist-util-map');
+
+const plain = node =>
+	node && node.value
+		? node.value
+		: node.alt
+		? node.alt
+		: node.title
+		? node.title
+		: node.children
+		? node.children.map(plain).join('\n\n')
+		: '';
+
+const extract_plaintext = () => (ast, file) => {
+	file.data.plaintext = plain(strip()(map_ast(ast, n => n))).replace(
+		/^\n*|\n*$/,
+		''
+	);
+};
 
 const extract_frontmatter = [
 	frontmatter,
