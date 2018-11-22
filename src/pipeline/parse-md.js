@@ -9,6 +9,11 @@ const visit = require('unist-util-visit');
 const strip = require('strip-markdown');
 const map_ast = require('unist-util-map');
 
+/*
+	Adapted from the `mdast-util-to-string` package,
+	this function takes a MDAST node and recursively
+	stringifies its content. 
+ */
 const plain = node =>
 	node && node.value
 		? node.value
@@ -20,13 +25,25 @@ const plain = node =>
 		? node.children.map(plain).join('\n\n')
 		: '';
 
+/*
+	Unified plugin that adds the `plaintext` property
+	to the file's `data`.
+ */
 const extract_plaintext = () => (ast, file) => {
-	file.data.plaintext = plain(strip()(map_ast(ast, n => n))).replace(
-		/^\n*|\n*$/,
-		''
-	);
+	file.data.plaintext = plain(
+		// Since strip-markdown modifies the AST,
+		// we want to create a copy beforehand
+		// just for the purpose of extracting the plain text.
+		strip()(map_ast(ast, n => n))
+	)
+		// Finally, trim any newlines at the beginning/end of the text.
+		.replace(/^\n*|\n*$/, '');
 };
 
+/*
+	An Unified preset for extracting the post's YAML frontmatter
+	into the file's `data.frontmatter`. 
+ */
 const extract_frontmatter = [
 	frontmatter,
 	parseFrontmatter,
@@ -47,6 +64,7 @@ module.exports = (cfg = {}) => {
 		.use(parse)
 		.use(extract_frontmatter)
 		.use(mdast_phase_plugins)
+		.use(extract_plaintext)
 		.use(mdToHtml, { allowDangerousHTML: true })
 		.use(raw)
 		.use(hast_phase_plugins)
