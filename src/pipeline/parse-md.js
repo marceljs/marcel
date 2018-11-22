@@ -7,37 +7,23 @@ const raw = require('rehype-raw');
 const html = require('rehype-stringify');
 const visit = require('unist-util-visit');
 const strip = require('strip-markdown');
-const map_ast = require('unist-util-map');
-
-/*
-	Adapted from the `mdast-util-to-string` package,
-	this function takes a MDAST node and recursively
-	stringifies its content. 
- */
-const plain = node =>
-	node && node.value
-		? node.value
-		: node.alt
-		? node.alt
-		: node.title
-		? node.title
-		: node.children
-		? node.children.map(plain).join('\n\n')
-		: '';
+const extend = require('extend');
+const stringify = require('remark-stringify');
 
 /*
 	Unified plugin that adds the `plaintext` property
 	to the file's `data`.
  */
-const extract_plaintext = () => (ast, file) => {
-	file.data.plaintext = plain(
-		// Since strip-markdown modifies the AST,
-		// we want to create a copy beforehand
-		// just for the purpose of extracting the plain text.
-		strip()(map_ast(ast, n => n))
-	)
-		// Finally, trim any newlines at the beginning/end of the text.
-		.replace(/^\n*|\n*$/, '');
+const extract_plaintext = () => {
+	let processor = unified()
+		.use(strip)
+		.use(stringify);
+	return (ast, file) => {
+		file.data.plaintext = processor
+			.stringify(processor.runSync(extend(true, {}, ast)))
+			// Trim any newlines at the beginning/end of the text.
+			.replace(/^\n*|\n*$/, '');
+	};
 };
 
 /*
@@ -69,12 +55,6 @@ module.exports = (cfg = {}) => {
 		.use(raw)
 		.use(hast_phase_plugins)
 		.use(html);
-	return async file => {
-		let parsed = await processor.process(file);
-		file.data = {
-			...file.data,
-			content: parsed.contents
-		};
-		return file;
-	};
+
+	return file => processor.process(file);
 };
