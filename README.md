@@ -33,11 +33,15 @@ Document the thinking and the technical decisions, so that anyone who's interest
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md).
 
-## Related projects
+## Cognates
 
-Some projects that have similar aims to Marcel:
+Projects that have similar aims to Marcel:
 
 -   [Jekyll](https://jekyllrb.com/) (Ruby)
 -   [Hugo](https://gohugo.io/) (Go)
 -   [Eleventy](https://11ty.io) (JS)
 -   [Zola](https://getzola.org/) (Rust)
+
+And some interesting approaches:
+
+-   [Pollen](https://docs.racket-lang.org/pollen/) (Racket)
