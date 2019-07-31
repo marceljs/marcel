@@ -1,60 +1,22 @@
 const unified = require('unified');
-const parse = require('remark-parse');
-const frontmatter = require('remark-frontmatter');
-const parseFrontmatter = require('remark-parse-yaml');
-const mdToHtml = require('remark-rehype');
-const raw = require('rehype-raw');
-const html = require('rehype-stringify');
-const visit = require('unist-util-visit');
-const strip = require('strip-markdown');
-const extend = require('extend');
-const stringify = require('remark-stringify');
+const to_mdast = require('remark-parse');
+const mdast_to_hast = require('remark-rehype');
+const md_in_html_in_md = require('rehype-raw');
+const to_html = require('rehype-stringify');
 
-/*
-	Unified plugin that adds the `plaintext` property
-	to the file's `data`.
- */
-const extract_plaintext = () => {
-	let processor = unified()
-		.use(strip)
-		.use(stringify);
-	return (ast, file) => {
-		file.data.plaintext = processor
-			.stringify(processor.runSync(extend(true, {}, ast)))
-			// Trim any newlines at the beginning/end of the text.
-			.replace(/^\n*|\n*$/, '');
-	};
-};
-
-/*
-	An Unified preset for extracting the post's YAML frontmatter
-	into the file's `data.frontmatter`. 
- */
-const extract_frontmatter = [
-	frontmatter,
-	parseFrontmatter,
-	() => (ast, file) => {
-		visit(ast, 'yaml', item => {
-			file.data.frontmatter = item.data.parsedValue;
-		});
-	}
-];
+const frontmatter = require('./unified/remark-extract-frontmatter');
+const plaintext = require('./unified/remark-extract-plaintext');
+const plugins_for = require('../util/plugins-for');
 
 module.exports = (cfg = {}) => {
-	let plugins = cfg.plugins || [];
-
-	let mdast_phase_plugins = plugins.map(p => p.onmdast).filter(f => f);
-	let hast_phase_plugins = plugins.map(p => p.onhast).filter(f => f);
-
 	const processor = unified()
-		.use(parse)
-		.use(extract_frontmatter)
-		.use(mdast_phase_plugins)
-		.use(extract_plaintext)
-		.use(mdToHtml, { allowDangerousHTML: true })
-		.use(raw)
-		.use(hast_phase_plugins)
-		.use(html);
-
+		.use(to_mdast)
+		.use(plugins_for(cfg, 'onmdast'))
+		.use(frontmatter)
+		.use(plaintext)
+		.use(mdast_to_hast, { allowDangerousHTML: true })
+		.use(md_in_html_in_md)
+		.use(plugins_for(cfg, 'onhast'))
+		.use(to_html);
 	return file => processor.process(file);
 };

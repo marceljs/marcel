@@ -1,6 +1,6 @@
 // Libs
 const fs = require('fs-extra');
-const path = require('path');
+const { join } = require('path');
 const in_cwd = require('is-path-in-cwd');
 const fg = require('fast-glob');
 const vfile = require('to-vfile');
@@ -17,6 +17,7 @@ const markdown_parser = require('./pipeline/parse-md');
 const group_by = require('./util/group-by');
 const add_async_filter = require('./templates/add-async-filter');
 const from_entries = require('./util/from-entries');
+const plugins_for = require('./util/plugins-for');
 
 const read = require('./pipeline/read');
 
@@ -41,6 +42,11 @@ module.exports = class Marcel {
 		};
 
 		this.renderer = renderer(this.config);
+
+		let fns = plugins_for(this.config, 'onload');
+		this.renderer.on('load', (name, src) => {
+			fns.forEach(f => f(name, src));
+		});
 	}
 
 	async run(opts) {
@@ -67,7 +73,7 @@ module.exports = class Marcel {
 			)).map(f => [f.stem, f.data])
 		);
 
-		let parser = markdown_parser(this.config);
+		let parse = markdown_parser(this.config);
 
 		let posts = (await Promise.all(
 			(await read('**/*.md', this.config.contentDir)).map(
@@ -75,7 +81,7 @@ module.exports = class Marcel {
 					vfile
 						.read({ path, cwd }, 'utf8')
 						.then(require('./pipeline/file-stats'))
-						.then(parser)
+						.then(parse)
 						.then(require('./pipeline/to-post')(this.config))
 			)
 		)).filter(noDrafts);
@@ -179,6 +185,8 @@ module.exports = class Marcel {
 			.forEach(entry =>
 				this.write_page(entry.permalink, entry.__rendered)
 			);
+
+		plugins_for(this.config, 'onfinish').forEach(f => f());
 	}
 
 	async write_page(permalink, content) {
@@ -190,7 +198,7 @@ module.exports = class Marcel {
 		 */
 		let output_path = permalink.match(/\.html$/)
 			? permalink
-			: path.join(permalink, 'index.html');
-		fs.outputFileSync(path.join(this.config.distDir, output_path), content);
+			: join(permalink, 'index.html');
+		fs.outputFileSync(join(this.config.distDir, output_path), content);
 	}
 };
