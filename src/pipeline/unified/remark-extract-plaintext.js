@@ -1,19 +1,23 @@
-const unified = require('unified');
-const strip = require('strip-markdown');
-const stringify = require('remark-stringify');
-const extend = require('extend');
 /*
-	Unified plugin that adds the `plaintext` property
-	to the file's `data`.
+	Unified plugin that generates a plain-text version
+	of the content and places it in `file.data.plaintext`.
  */
+
+const unified = require('unified');
+const extend = require('extend');
+
+let processor = unified()
+	.use(require('strip-markdown'))
+	.use(require('remark-stringify'));
+
 module.exports = () => {
-	let processor = unified()
-		.use(strip)
-		.use(stringify);
 	return (ast, file) => {
-		file.data.plaintext = processor
-			.stringify(processor.runSync(extend(true, {}, ast)))
-			// Trim any newlines at the beginning/end of the text.
-			.replace(/^\n*|\n*$/, '');
+		// Make a deep copy of the AST
+		// so we don't alter it
+		let copy = extend(true, {}, ast);
+		let res = processor.stringify(processor.runSync(copy));
+
+		// Trim any newlines at the beginning/end of the text.
+		file.data.plaintext = res.replace(/^\n*|\n*$/, '');
 	};
 };

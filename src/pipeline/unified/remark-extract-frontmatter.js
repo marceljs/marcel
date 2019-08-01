@@ -1,30 +1,43 @@
-const visit = require('unist-util-visit');
-const frontmatter = require('remark-frontmatter');
-const yaml = require('js-yaml');
-const toml = require('toml');
+const find = require('unist-util-find');
 
 /*
-	An Unified preset for extracting the post's YAML/TOML/JSON frontmatter
-	into the file's `data.frontmatter`. 
+	An Unified preset for extracting 
+	the post's YAML/TOML/JSON frontmatter
+	into the file's `data.frontmatter`
  */
+
+const FORMATS = [
+	{
+		type: 'yaml',
+		marker: '-',
+		parse: require('js-yaml').safeLoad
+	},
+	{
+		type: 'toml',
+		marker: '+',
+		parse: require('toml').parse
+	},
+	{
+		type: 'json_fm',
+		fence: {
+			open: '{',
+			close: '}'
+		},
+		parse: val => JSON.parse(`{${val}}`)
+	}
+];
+
+const TYPES = Object.fromEntries(FORMATS.map(fmt => [fmt.type, fmt]));
+
 module.exports = [
-	[
-		frontmatter,
-		[
-			{ type: 'yaml', marker: '-' },
-			{ type: 'toml', marker: '+' },
-			{ type: 'json', fence: { open: '{', close: '}' } }
-		]
-	],
+	[require('remark-frontmatter'), FORMATS],
 	() => (ast, file) => {
-		visit(ast, item => {
-			if (item.type === 'yaml') {
-				file.data.frontmatter = yaml.safeLoad(item.value);
-			} else if (item.type === 'toml') {
-				file.data.frontmatter = toml(item.value);
-			} else if (item.type === 'json') {
-				file.data.frontmatter = JSON.parse(`{${item.value}}`);
-			}
-		});
+		let node = find(ast, n => TYPES[n.type]);
+		if (node) {
+			file.data.frontmatter = {
+				...file.data.frontmatter,
+				...TYPES[node.type].parse(node.value)
+			};
+		}
 	}
 ];

@@ -1,22 +1,24 @@
 const unified = require('unified');
-const to_mdast = require('remark-parse');
-const mdast_to_hast = require('remark-rehype');
-const md_in_html_in_md = require('rehype-raw');
-const to_html = require('rehype-stringify');
 
 const frontmatter = require('./unified/remark-extract-frontmatter');
 const plaintext = require('./unified/remark-extract-plaintext');
-const plugins_for = require('../util/plugins-for');
 
-module.exports = (cfg = {}) => {
-	const processor = unified()
-		.use(to_mdast)
-		.use(plugins_for(cfg, 'onmdast'))
-		.use(frontmatter)
-		.use(plaintext)
-		.use(mdast_to_hast, { allowDangerousHTML: true })
-		.use(md_in_html_in_md)
-		.use(plugins_for(cfg, 'onhast'))
-		.use(to_html);
-	return file => processor.process(file);
+let one = unified()
+	.use(require('remark-parse'))
+	.use(frontmatter);
+
+let two = unified()
+	.use(plaintext)
+	.use(require('remark-rehype'), {
+		allowDangerousHTML: true
+	})
+	.use(require('rehype-raw'))
+	.use(require('@mapbox/rehype-prism'));
+
+let three = unified().use(require('rehype-stringify'));
+
+module.exports = {
+	mdast: file => one.run(one.parse(file), file),
+	hast: two.run,
+	html: three.stringify
 };

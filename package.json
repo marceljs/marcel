@@ -13,6 +13,7 @@
 		"node": ">= 8.0.0"
 	},
 	"dependencies": {
+		"@mapbox/rehype-prism": "^0.3.1",
 		"@sindresorhus/slugify": "^0.9.1",
 		"chalk": "^2.4.1",
 		"commander": "^2.19.0",
@@ -41,6 +42,7 @@
 		"to-vfile": "^6.0.0",
 		"toml": "^3.0.0",
 		"unified": "^8.3.2",
+		"unist-util-find": "^1.0.1",
 		"unist-util-visit": "^1.4.0",
 		"v8-compile-cache": "^2.0.2"
 	},

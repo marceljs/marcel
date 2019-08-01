@@ -25,10 +25,6 @@ module.exports = {
 	],
 	plugins: [],
 	permalinks: {
-		// see the default permalink scheme in src/default.permalinks-single.js
-		single: (post, site) => false,
-
-		// see the default permalink scheme in src/default.permalinks-list.js
-		list: (list, site) => false
+		list: () => {}
 	}
 };

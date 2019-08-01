@@ -4,6 +4,7 @@ const { join } = require('path');
 const in_cwd = require('is-path-in-cwd');
 const fg = require('fast-glob');
 const vfile = require('to-vfile');
+const visit = require('unist-util-visit');
 
 // Modules
 const renderer = require('./templates/renderer');
@@ -11,7 +12,7 @@ const render_single = require('./templates/render-single');
 const render_list = require('./templates/render-list');
 const permalinks_list = require('./permalinks-list');
 
-const markdown_parser = require('./pipeline/parse-md');
+const processor = require('./pipeline/parse-md');
 
 // Utils
 const group_by = require('./util/group-by');
@@ -20,6 +21,8 @@ const from_entries = require('./util/from-entries');
 const plugins_for = require('./util/plugins-for');
 
 const read = require('./pipeline/read');
+
+const Post = require('./model/post');
 
 // Models
 const List = require('./list');
@@ -30,9 +33,6 @@ const default_options = {
 	// whether to include drafts in the build
 	drafts: false
 };
-
-const noDrafts = post =>
-	post.permalink !== false && (!post.draft || options.drafts);
 
 module.exports = class Marcel {
 	constructor(cfg) {
@@ -73,18 +73,36 @@ module.exports = class Marcel {
 			)).map(f => [f.stem, f.data])
 		);
 
-		let parse = markdown_parser(this.config);
-
-		let posts = (await Promise.all(
-			(await read('**/*.md', this.config.contentDir)).map(
-				({ path, cwd }) =>
-					vfile
-						.read({ path, cwd }, 'utf8')
-						.then(require('./pipeline/file-stats'))
-						.then(parse)
-						.then(require('./pipeline/to-post')(this.config))
+		let posts = await Promise.all(
+			(await fg('**/*.md', { cwd: this.config.contentDir })).map(
+				async filepath => {
+					let post = new Post({
+						perma: this.config.permalinks.single
+							? _ => this.config.permalinks.single(_, this.config)
+							: undefined
+					});
+					await post.load(filepath, {
+						cwd: this.config.contentDir,
+						frontmatter_path: filepath.replace(/\.md$/, '.json')
+					});
+					await post.parse(processor.mdast);
+					return post;
+				}
 			)
-		)).filter(noDrafts);
+		);
+
+		posts = posts.filter(
+			({ permalink, draft }) =>
+				permalink !== false && (!draft || options.drafts)
+		);
+
+		posts = await Promise.all(
+			posts.map(async post => {
+				await post.transform(processor.hast);
+				await post.transform(processor.html);
+				return post;
+			})
+		);
 
 		let lists = this.config.lists.reduce((res, t) => {
 			let groups = group_by(posts, t.from);
