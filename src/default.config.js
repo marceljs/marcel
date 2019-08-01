@@ -27,5 +27,10 @@ module.exports = {
 	permalinks: {
 		single: (post, config) => {},
 		list: (post, config) => {}
+	},
+	markdown: {
+		smartypants: true,
+		headerlinks: true,
+		highlight: true
 	}
 };
