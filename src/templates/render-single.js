@@ -1,8 +1,7 @@
-const hierarchy = require('./hierarchy-single');
 const find_first = require('./find-first');
 
 module.exports = async (post, renderer, context, config) => {
-	let templates = hierarchy(post).map(t => `${t}.${config.templateExt}`);
+	let templates = post.templates.map(t => `${t}.${config.templateExt}`);
 	let template = find_first(templates, config.templateDir);
 	if (template) {
 		return new Promise((resolve, reject) => {

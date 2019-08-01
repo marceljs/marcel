@@ -1,11 +1,11 @@
 const tape = require('tape');
-const hierarchy = require('../../../src/templates/hierarchy-list');
+const { Hierarchy } = require('../../src/model/list');
 
 tape('single post hierarchy', test => {
-	test.deepEqual(hierarchy({}), ['list', 'index'], 'empty object');
+	test.deepEqual(Hierarchy({}), ['list', 'index'], 'empty object');
 
 	test.deepEqual(
-		hierarchy({
+		Hierarchy({
 			taxonomy: 'tags'
 		}),
 		['list-tags-index', 'list-tags', 'list', 'index'],
@@ -13,7 +13,7 @@ tape('single post hierarchy', test => {
 	);
 
 	test.deepEqual(
-		hierarchy({
+		Hierarchy({
 			taxonomy: 'tags',
 			term: 'myterm'
 		}),
@@ -22,7 +22,7 @@ tape('single post hierarchy', test => {
 	);
 
 	test.deepEqual(
-		hierarchy({
+		Hierarchy({
 			taxonomy: 'section',
 			term: 'posts'
 		}),

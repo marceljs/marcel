@@ -122,6 +122,10 @@ class Post {
 	get draft() {
 		return this.frontmatter.draft;
 	}
+
+	get templates() {
+		return Post.Hierarchy(this);
+	}
 }
 
 /*
@@ -135,6 +139,27 @@ Post.DefaultPermalink = post => {
 	return post.file.dirname === '.'
 		? `/${link}`
 		: `/${post.file.dirname}/${link}`;
+};
+
+Post.Hierarchy = post => {
+	let templates = [];
+
+	if (post.template) {
+		templates.push(post.template);
+	}
+
+	if (post.type) {
+		if (post.section && post.section !== '__undefined__') {
+			templates.push(`single-${post.section}-${post.type}`);
+		}
+		templates.push(`single-${post.type}`);
+	}
+
+	if (post.section && post.section !== '__undefined__') {
+		templates.push(`single-${post.section}`);
+	}
+
+	return templates.concat([`single`, `index`]);
 };
 
 module.exports = Post;

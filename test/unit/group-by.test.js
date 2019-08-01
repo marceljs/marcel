@@ -1,5 +1,5 @@
 const tape = require('tape');
-const groupby = require('../../../src/util/group-by');
+const groupby = require('../../src/util/group-by');
 
 tape('test section grouping', test => {
 	let posts = [
