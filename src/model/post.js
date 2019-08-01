@@ -1,5 +1,6 @@
 const { stat, exists, readFile } = require('fs-extra');
-const { resolve, join, isAbsolute, sep } = require('path');
+const { resolve, join, sep } = require('path');
+const { parse } = require('url');
 const vfile = require('to-vfile');
 const slugify = require('@sindresorhus/slugify');
 const visit = require('unist-util-visit');
@@ -72,15 +73,29 @@ class Post {
 		visit(this.file.__ast__, node => {
 			if (node.tagName === 'a') {
 				let { href } = node.properties;
-				let link;
-				try {
-					link = new URL(href);
-				} catch (err) {
-					// Relative URL
-					link = join(this.file.dirname, href);
+
+				/*
+					Note: The WHATWG-compliant URL parser
+					that's invoked with new URL() can't currently
+					handle relative URLs, and it's hard to solve
+					this comprehensively. For now, we rely on
+					url.parse(), with the caveat that it may be
+					deprecated in the future.
+					See: https://github.com/nodejs/node/issues/12682
+				 */
+				let url = parse(href);
+				if (url.protocol === null) {
+					let link = join(this.file.dirname, url.pathname);
 					if (__posts__.has(link)) {
 						let destination = __posts__.get(link);
-						node.properties.href = destination.permalink;
+						let { permalink } = destination;
+						if (url.query) {
+							permalink += '?' + url.query;
+						}
+						if (url.hash) {
+							permalink += url.hash;
+						}
+						node.properties.href = permalink;
 					}
 				}
 			}
