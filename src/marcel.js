@@ -7,22 +7,17 @@ const vfile = require('to-vfile');
 const visit = require('unist-util-visit');
 
 // Modules
-const renderer = require('./templates/renderer');
-const render_single = require('./templates/render-single');
-const render_list = require('./templates/render-list');
-
 const mdast_proc = require('./markdown/mdast');
 const hast_proc = require('./markdown/hast');
 const html_proc = require('./markdown/html');
 
 // Utils
 const group_by = require('./util/group-by');
-const add_async_filter = require('./templates/add-async-filter');
-const plugins_for = require('./util/plugins-for');
 
 // Models
 const Post = require('./model/post');
 const List = require('./model/list');
+const Renderer = require('./renderer/nunjucks');
 
 const default_options = {
 	// whether to include drafts in the build
@@ -31,21 +26,11 @@ const default_options = {
 
 module.exports = class Marcel {
 	constructor(cfg) {
-		this.site = {
-			base: cfg.base
-		};
-
 		// Configure Models
 		Post.Permalink = post => cfg.permalinks.single(post, cfg);
 		List.Permalink = list => cfg.permalinks.list(list, cfg);
 
-		this.renderer = renderer(cfg);
-
-		let fns = plugins_for(cfg, 'onload');
-		this.renderer.on('load', (name, src) => {
-			fns.forEach(f => f(name, src));
-		});
-
+		this.renderer = new Renderer(cfg);
 		this.config = cfg;
 	}
 
@@ -59,7 +44,7 @@ module.exports = class Marcel {
 
 		// Load filters into Nunjucks
 		Object.keys(this.config.filters).forEach(name =>
-			add_async_filter(this.renderer, name, this.config.filters[name])
+			this.renderer.add_filter(name, this.config.filters[name])
 		);
 
 		/*
@@ -101,8 +86,7 @@ module.exports = class Marcel {
 					frontmatter_path: adjacent_fm(path)
 				});
 				try {
-					await post.execute(this.renderer, {
-						site: this.site,
+					await post.execute(this.renderer.env, {
 						data: this.data
 					});
 				} catch (err) {
@@ -181,16 +165,15 @@ module.exports = class Marcel {
 		// Render the individual posts
 		await Promise.all(
 			posts.map(async post => {
-				post.__rendered = await render_single(
-					post,
-					this.renderer,
+				post.__rendered = await this.renderer.render(
+					post.templates,
 					{
-						site: this.site,
+						post,
 						data: this.data,
 						Post,
 						List
 					},
-					this.config
+					'{{ content }}'
 				);
 			})
 		);
@@ -201,16 +184,15 @@ module.exports = class Marcel {
 			lists.map(async list => {
 				return {
 					permalink: list.permalink,
-					__rendered: await render_list(
-						list,
-						this.renderer,
+					__rendered: await this.renderer.render(
+						list.templates,
 						{
-							site: this.site,
+							list,
 							data: this.data,
 							Post,
 							List
 						},
-						this.config
+						'{{ posts.length }}'
 					)
 				};
 			})
@@ -243,8 +225,6 @@ module.exports = class Marcel {
 			.forEach(entry =>
 				this.write_page(entry.permalink, entry.__rendered)
 			);
-
-		plugins_for(this.config, 'onfinish').forEach(f => f());
 	}
 
 	async write_page(permalink, content) {
