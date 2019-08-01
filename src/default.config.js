@@ -25,6 +25,7 @@ module.exports = {
 	],
 	plugins: [],
 	permalinks: {
-		list: () => {}
+		single: (post, config) => {},
+		list: (post, config) => {}
 	}
 };

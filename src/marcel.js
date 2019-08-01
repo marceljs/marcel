@@ -10,22 +10,21 @@ const visit = require('unist-util-visit');
 const renderer = require('./templates/renderer');
 const render_single = require('./templates/render-single');
 const render_list = require('./templates/render-list');
-const permalinks_list = require('./permalinks-list');
 
-const processor = require('./pipeline/parse-md');
+const read = require('./pipeline/read');
+
+const mdast = require('./markdown/mdast');
+const hast = require('./markdown/hast');
+const html = require('./markdown/html');
 
 // Utils
 const group_by = require('./util/group-by');
 const add_async_filter = require('./templates/add-async-filter');
-const from_entries = require('./util/from-entries');
 const plugins_for = require('./util/plugins-for');
 
-const read = require('./pipeline/read');
-
-const Post = require('./model/post');
-
 // Models
-const List = require('./list');
+const Post = require('./model/post');
+const List = require('./model/list');
 
 const data_extensions = ['js', 'json', 'yaml', 'csv', 'tsv', 'ndtxt'];
 
@@ -36,17 +35,22 @@ const default_options = {
 
 module.exports = class Marcel {
 	constructor(cfg) {
-		this.config = cfg;
 		this.site = {
-			link: this.config.base
+			link: cfg.base
 		};
 
-		this.renderer = renderer(this.config);
+		// Configure Models
+		Post.Permalink = post => cfg.permalinks.single(post, cfg);
+		List.Permalink = list => cfg.permalinks.list(list, cfg);
 
-		let fns = plugins_for(this.config, 'onload');
+		this.renderer = renderer(cfg);
+
+		let fns = plugins_for(cfg, 'onload');
 		this.renderer.on('load', (name, src) => {
 			fns.forEach(f => f(name, src));
 		});
+
+		this.config = cfg;
 	}
 
 	async run(opts) {
@@ -60,7 +64,7 @@ module.exports = class Marcel {
 			add_async_filter(this.renderer, name, this.config.filters[name])
 		);
 
-		this.data = from_entries(
+		this.data = Object.fromEntries(
 			(await Promise.all(
 				(await read(
 					`**/*.{${data_extensions.join(',')}}`,
@@ -76,16 +80,12 @@ module.exports = class Marcel {
 		let posts = await Promise.all(
 			(await fg('**/*.md', { cwd: this.config.contentDir })).map(
 				async filepath => {
-					let post = new Post({
-						perma: this.config.permalinks.single
-							? _ => this.config.permalinks.single(_, this.config)
-							: undefined
-					});
+					let post = new Post();
 					await post.load(filepath, {
 						cwd: this.config.contentDir,
 						frontmatter_path: filepath.replace(/\.md$/, '.json')
 					});
-					await post.parse(processor.mdast);
+					await post.parse(mdast);
 					return post;
 				}
 			)
@@ -98,8 +98,8 @@ module.exports = class Marcel {
 
 		posts = await Promise.all(
 			posts.map(async post => {
-				await post.transform(processor.hast);
-				await post.transform(processor.html);
+				await post.transform(hast);
+				await post.transform(html);
 				return post;
 			})
 		);
@@ -111,7 +111,7 @@ module.exports = class Marcel {
 				return t.include_undefined || term !== '__undefined__';
 			}
 
-			let list_index = List({
+			let list_index = new List({
 				taxonomy: t.from,
 				terms: groups
 					.filter(item => include_term(item[0]) && item[1].length)
@@ -126,12 +126,13 @@ module.exports = class Marcel {
 				)
 				.concat(
 					groups
-						.map(item =>
-							List({
-								taxonomy: t.from,
-								term: item[0],
-								posts: item[1]
-							})
+						.map(
+							item =>
+								new List({
+									taxonomy: t.from,
+									term: item[0],
+									posts: item[1]
+								})
 						)
 						.filter(
 							l =>
@@ -162,7 +163,7 @@ module.exports = class Marcel {
 		let collections = (await Promise.all(
 			lists.map(async list => {
 				return {
-					permalink: permalinks_list(list, this.config),
+					permalink: list.permalink,
 					__rendered: await render_list(
 						list,
 						this.renderer,

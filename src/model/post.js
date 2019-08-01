@@ -12,19 +12,7 @@ const strip_filename_prefix = require('../util/strip-filename-prefix');
  */
 const __posts__ = new Map();
 
-// Default permalink function
-const default_permalink = post => {
-	let link = post.slug || post.filename_slug || post.title_slug;
-	return post.file.dirname === '.'
-		? `/${link}`
-		: `/${post.file.dirname}/${link}`;
-};
-
 class Post {
-	constructor({ perma }) {
-		this.__perma__ = perma;
-	}
-
 	/*
 		Load a file path into a VFile,
 		and augment its data with:
@@ -127,13 +115,26 @@ class Post {
 		// User-supplied permalink.
 		// Allow a result of `false` to be returned (= is draft),
 		// only go to default on undefined.
-		let custom = this.__perma__ ? this.__perma__(this) : undefined;
-		return custom !== undefined ? custom : default_permalink(this);
+		let custom = Post.Permalink ? Post.Permalink(this) : undefined;
+		return custom !== undefined ? custom : Post.DefaultPermalink(this);
 	}
 
 	get draft() {
 		return this.frontmatter.draft;
 	}
 }
+
+/*
+	Static properties
+	-----------------
+ */
+
+Post.Permalink = null;
+Post.DefaultPermalink = post => {
+	let link = post.slug || post.filename_slug || post.title_slug;
+	return post.file.dirname === '.'
+		? `/${link}`
+		: `/${post.file.dirname}/${link}`;
+};
 
 module.exports = Post;
