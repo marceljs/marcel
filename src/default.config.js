@@ -31,6 +31,8 @@ module.exports = {
 	markdown: {
 		smartypants: true,
 		headerlinks: true,
-		highlight: true
+		highlight: {
+			ignoreMissing: true
+		}
 	}
 };

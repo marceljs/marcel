@@ -1,6 +1,7 @@
 const { stat, exists, readFile } = require('fs-extra');
 const { resolve, join, sep } = require('path');
 const { parse } = require('url');
+const { promisify } = require('util');
 const vfile = require('to-vfile');
 const slugify = require('@sindresorhus/slugify');
 const visit = require('unist-util-visit');
@@ -42,6 +43,14 @@ class Post {
 		this.file = file;
 
 		__posts__.set(this.file.path, this);
+	}
+
+	async execute(renderer, context) {
+		if (!this.file) {
+			throw new Error('File has not been loaded');
+		}
+		let render = promisify(renderer.renderString.bind(renderer));
+		this.file.contents = await render(this.file.contents, context);
 	}
 
 	async parse(parser) {

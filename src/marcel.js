@@ -100,6 +100,14 @@ module.exports = class Marcel {
 					cwd: contentDir,
 					frontmatter_path: adjacent_fm(path)
 				});
+				try {
+					await post.execute(this.renderer, {
+						site: this.site,
+						data: this.data
+					});
+				} catch (err) {
+					console.error(`Template rendering error in ${path}:`, err);
+				}
 				await post.parse(mdast);
 				return post;
 			})
