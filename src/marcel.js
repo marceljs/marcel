@@ -11,9 +11,9 @@ const renderer = require('./templates/renderer');
 const render_single = require('./templates/render-single');
 const render_list = require('./templates/render-list');
 
-const mdast = require('./markdown/mdast');
-const hast = require('./markdown/hast');
-const html = require('./markdown/html');
+const mdast_proc = require('./markdown/mdast');
+const hast_proc = require('./markdown/hast');
+const html_proc = require('./markdown/html');
 
 // Utils
 const group_by = require('./util/group-by');
@@ -88,6 +88,10 @@ module.exports = class Marcel {
 
 		let content_paths = await fg('**/*.md', { cwd: contentDir });
 		let adjacent_fm = path => path.replace(/\.md$/, '.json');
+
+		let mdast = mdast_proc(this.config.markdown);
+		let hast = hast_proc(this.config.markdown);
+		let html = html_proc(this.config.markdown);
 
 		let posts = await Promise.all(
 			content_paths.map(async path => {
