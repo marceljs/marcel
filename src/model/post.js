@@ -24,6 +24,8 @@ class Post {
 
 		let file = await vfile.read({ path, cwd }, 'utf8');
 
+		file.data.frontmatter = {};
+
 		// Load frontmatter from external file
 		let fm_path = resolve(cwd, frontmatter_path);
 		if (await exists(fm_path)) {
@@ -54,6 +56,13 @@ class Post {
 		this.file.__ast__ = await transformer(this.file.__ast__, this.file);
 	}
 
+	async compile(compiler) {
+		if (!this.file.__ast__) {
+			throw new Error('File has not been parsed');
+		}
+		this.file.contents = await compiler(this.file.__ast__, this.file);
+	}
+
 	/*
 		Property getters
 		----------------
@@ -73,6 +82,10 @@ class Post {
 
 	get excerpt() {
 		return this.frontmatter.excerpt;
+	}
+
+	get content() {
+		return this.file.contents;
 	}
 
 	get date() {

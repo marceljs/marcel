@@ -109,7 +109,7 @@ module.exports = class Marcel {
 		posts = await Promise.all(
 			posts.map(async post => {
 				await post.transform(hast);
-				await post.transform(html);
+				await post.compile(html);
 				return post;
 			})
 		);
