@@ -7,6 +7,8 @@ let processor = unified()
 		allowDangerousHTML: true
 	})
 	.use(require('rehype-raw'))
-	.use(require('@mapbox/rehype-prism'));
+	.use(require('@mapbox/rehype-prism'))
+	.use(require('rehype-slug'))
+	.use(require('rehype-autolink-headings'));
 
 module.exports = processor.run;

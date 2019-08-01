@@ -84,7 +84,7 @@ class Post {
 					See: https://github.com/nodejs/node/issues/12682
 				 */
 				let url = parse(href);
-				if (url.protocol === null) {
+				if (url.protocol === null && url.pathname) {
 					let link = join(this.file.dirname, url.pathname);
 					if (__posts__.has(link)) {
 						let destination = __posts__.get(link);
