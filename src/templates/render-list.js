@@ -1,26 +1,19 @@
 const find_first = require('./find-first');
+const { promisify } = require('util');
 
 module.exports = async (list, renderer, context, config) => {
 	let templates = list.templates.map(t => `${t}.${config.templateExt}`);
 	let template = find_first(templates, config.templateDir);
+	let render_fn;
 	if (template) {
-		return new Promise((resolve, reject) => {
-			renderer.render(
-				template,
-				{
-					posts: list.posts || [],
-					...context
-				},
-				(err, result) => {
-					if (err) {
-						reject(err);
-					} else {
-						resolve(result);
-					}
-				}
-			);
-		});
+		render_fn = promisify(renderer.render.bind(renderer));
 	} else {
-		throw new Error('Could not find a matching template');
+		// todo show warning
+		template = '{{ posts.length }}';
+		render_fn = promisify(renderer.renderString.bind(renderer));
 	}
+	return render_fn(template, {
+		posts: list.posts || [],
+		...context
+	});
 };
