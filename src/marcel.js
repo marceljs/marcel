@@ -11,8 +11,6 @@ const renderer = require('./templates/renderer');
 const render_single = require('./templates/render-single');
 const render_list = require('./templates/render-list');
 
-const read = require('./pipeline/read');
-
 const mdast = require('./markdown/mdast');
 const hast = require('./markdown/hast');
 const html = require('./markdown/html');
@@ -25,8 +23,6 @@ const plugins_for = require('./util/plugins-for');
 // Models
 const Post = require('./model/post');
 const List = require('./model/list');
-
-const data_extensions = ['js', 'json', 'yaml', 'csv', 'tsv', 'ndtxt'];
 
 const default_options = {
 	// whether to include drafts in the build
@@ -59,36 +55,50 @@ module.exports = class Marcel {
 			...opts
 		};
 
+		let { dataDir, contentDir } = this.config;
+
 		// Load filters into Nunjucks
 		Object.keys(this.config.filters).forEach(name =>
 			add_async_filter(this.renderer, name, this.config.filters[name])
 		);
 
-		this.data = Object.fromEntries(
-			(await Promise.all(
-				(await read(
-					`**/*.{${data_extensions.join(',')}}`,
-					this.config.dataDir
-				)).map(({ path, cwd }) =>
-					vfile
-						.read({ path, cwd }, 'utf8')
-						.then(require('./pipeline/parse-data'))
-				)
-			)).map(f => [f.stem, f.data])
+		/*
+			Load global data
+			----------------
+		 */
+
+		let data_paths = await fg('**/*.{js,json,yaml,csv,tsv,ndtxt}', {
+			cwd: dataDir
+		});
+
+		let data_files = await Promise.all(
+			data_paths.map(path =>
+				vfile
+					.read({ path, cwd: dataDir }, 'utf8')
+					.then(require('./pipeline/parse-data'))
+			)
 		);
 
+		this.data = Object.fromEntries(data_files.map(f => [f.stem, f.data]));
+
+		/*
+			Load content files
+			------------------
+		 */
+
+		let content_paths = await fg('**/*.md', { cwd: contentDir });
+		let adjacent_fm = path => path.replace(/\.md$/, '.json');
+
 		let posts = await Promise.all(
-			(await fg('**/*.md', { cwd: this.config.contentDir })).map(
-				async filepath => {
-					let post = new Post();
-					await post.load(filepath, {
-						cwd: this.config.contentDir,
-						frontmatter_path: filepath.replace(/\.md$/, '.json')
-					});
-					await post.parse(mdast);
-					return post;
-				}
-			)
+			content_paths.map(async path => {
+				let post = new Post();
+				await post.load(path, {
+					cwd: contentDir,
+					frontmatter_path: adjacent_fm(path)
+				});
+				await post.parse(mdast);
+				return post;
+			})
 		);
 
 		posts = posts.filter(
@@ -103,6 +113,11 @@ module.exports = class Marcel {
 				return post;
 			})
 		);
+
+		/*
+			Generate lists
+			--------------
+		 */
 
 		let lists = this.config.lists.reduce((res, t) => {
 			let groups = group_by(posts, t.from);
