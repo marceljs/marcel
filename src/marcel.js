@@ -32,7 +32,7 @@ const default_options = {
 module.exports = class Marcel {
 	constructor(cfg) {
 		this.site = {
-			link: cfg.base
+			base: cfg.base
 		};
 
 		// Configure Models
@@ -109,6 +109,14 @@ module.exports = class Marcel {
 		posts = await Promise.all(
 			posts.map(async post => {
 				await post.transform(hast);
+				return post;
+			})
+		);
+
+		posts.forEach(post => post.apply_permalinks());
+
+		posts = await Promise.all(
+			posts.map(async post => {
 				await post.compile(html);
 				return post;
 			})

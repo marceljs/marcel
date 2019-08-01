@@ -1,7 +1,8 @@
 const { stat, exists, readFile } = require('fs-extra');
-const { resolve, sep } = require('path');
+const { resolve, join, isAbsolute, sep } = require('path');
 const vfile = require('to-vfile');
 const slugify = require('@sindresorhus/slugify');
+const visit = require('unist-util-visit');
 
 const strip_filename_prefix = require('../util/strip-filename-prefix');
 
@@ -20,8 +21,6 @@ class Post {
 		* file statistics (creation date, etc.)
 	 */
 	async load(path, { cwd, frontmatter_path }) {
-		__posts__.set(path, this);
-
 		let file = await vfile.read({ path, cwd }, 'utf8');
 
 		file.data.frontmatter = {};
@@ -40,6 +39,8 @@ class Post {
 		};
 
 		this.file = file;
+
+		__posts__.set(this.file.path, this);
 	}
 
 	async parse(parser) {
@@ -61,6 +62,29 @@ class Post {
 			throw new Error('File has not been parsed');
 		}
 		this.file.contents = await compiler(this.file.__ast__, this.file);
+	}
+
+	apply_permalinks() {
+		if (!this.file.__ast__) {
+			throw new Error('File has not been parsed');
+		}
+
+		visit(this.file.__ast__, node => {
+			if (node.tagName === 'a') {
+				let { href } = node.properties;
+				let link;
+				try {
+					link = new URL(href);
+				} catch (err) {
+					// Relative URL
+					link = join(this.file.dirname, href);
+					if (__posts__.has(link)) {
+						let destination = __posts__.get(link);
+						node.properties.href = destination.permalink;
+					}
+				}
+			}
+		});
 	}
 
 	/*
