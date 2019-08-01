@@ -33,6 +33,7 @@ module.exports = {
 		headerlinks: true,
 		highlight: {
 			ignoreMissing: true
-		}
+		},
+		taskids: true
 	}
 };

@@ -1,11 +1,9 @@
 const unified = require('unified');
 const plaintext = require('./plugins/remark-extract-plaintext');
-const taskitem_slug = require('./plugins/remark-taskitem-slug');
 
 module.exports = options => {
 	let processor = unified()
 		.use(plaintext)
-		.use(taskitem_slug)
 		.use(require('remark-rehype'), {
 			allowDangerousHTML: true
 		})

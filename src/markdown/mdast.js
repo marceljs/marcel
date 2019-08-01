@@ -1,6 +1,7 @@
 const unified = require('unified');
 const frontmatter = require('./plugins/remark-extract-frontmatter');
 const smartypants = require('./plugins/remark-smartypants');
+const taskitem_ids = require('./plugins/remark-taskitem-ids');
 
 module.exports = options => {
 	let processor = unified()
@@ -11,6 +12,13 @@ module.exports = options => {
 		processor = processor.use(
 			smartypants,
 			options.smartypants === true ? {} : options.smartypants
+		);
+	}
+
+	if (options.taskids) {
+		processor = processor.use(
+			taskitem_ids,
+			options.taskids === true ? {} : options.taskids
 		);
 	}
 
