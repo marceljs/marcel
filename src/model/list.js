@@ -1,3 +1,5 @@
+let { normalize } = require('path');
+
 class List {
 	constructor(attrs) {
 		Object.assign(this, attrs);
@@ -8,7 +10,9 @@ class List {
 		// Allow a result of `false` to be returned (= is draft),
 		// only go to default on undefined.
 		let custom = List.Permalink ? List.Permalink(this) : undefined;
-		return custom !== undefined ? custom : List.DefaultPermalink(this);
+		return normalize(
+			custom !== undefined ? custom : List.DefaultPermalink(this)
+		);
 	}
 
 	get templates() {

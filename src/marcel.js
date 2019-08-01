@@ -186,7 +186,9 @@ module.exports = class Marcel {
 					this.renderer,
 					{
 						site: this.site,
-						data: this.data
+						data: this.data,
+						Post,
+						List
 					},
 					this.config
 				);
@@ -204,7 +206,9 @@ module.exports = class Marcel {
 						this.renderer,
 						{
 							site: this.site,
-							data: this.data
+							data: this.data,
+							Post,
+							List
 						},
 						this.config
 					)

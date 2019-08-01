@@ -1,5 +1,5 @@
 const { stat, exists, readFile } = require('fs-extra');
-const { resolve, join, sep } = require('path');
+const { resolve, join, sep, normalize } = require('path');
 const { parse } = require('url');
 const { promisify } = require('util');
 const vfile = require('to-vfile');
@@ -95,8 +95,8 @@ class Post {
 				let url = parse(href);
 				if (url.protocol === null && url.pathname) {
 					let link = join(this.file.dirname, url.pathname);
-					if (__posts__.has(link)) {
-						let destination = __posts__.get(link);
+					let destination = Post.for(link);
+					if (destination) {
 						let { permalink } = destination;
 						if (url.query) {
 							permalink += '?' + url.query;
@@ -177,7 +177,9 @@ class Post {
 		// Allow a result of `false` to be returned (= is draft),
 		// only go to default on undefined.
 		let custom = Post.Permalink ? Post.Permalink(this) : undefined;
-		return custom !== undefined ? custom : Post.DefaultPermalink(this);
+		return normalize(
+			custom !== undefined ? custom : Post.DefaultPermalink(this)
+		);
 	}
 
 	get draft() {
@@ -222,5 +224,7 @@ Post.Hierarchy = post => {
 
 	return templates.concat([`single`, `index`]);
 };
+
+Post.for = path => __posts__.get(path);
 
 module.exports = Post;
