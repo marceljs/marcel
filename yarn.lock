@@ -2016,6 +2016,11 @@ number-is-nan@^1.0.0:
   resolved "https://registry.yarnpkg.com/number-is-nan/-/number-is-nan-1.0.1.tgz#097b602b53422a522c1afb8790318336941a011d"
   integrity sha1-CXtgK1NCKlIsGvuHkDGDNpQaAR0=
 
+nunjucks-embed@^0.1.0:
+  version "0.1.0"
+  resolved "https://registry.yarnpkg.com/nunjucks-embed/-/nunjucks-embed-0.1.0.tgz#fba4464988b9735a599e112c265f8051c1ccb9dd"
+  integrity sha512-/Lh1ci5NkLs7y9hOJxNDwE1Zg17/JUr/pFiaZopOMTSv6tFBh49AtI9eUCiUgjBgDjHezYLOdxOTa5jkRwT9Iw==
+
 nunjucks@^3.2.0:
   version "3.2.0"
   resolved "https://registry.yarnpkg.com/nunjucks/-/nunjucks-3.2.0.tgz#53e95f43c9555e822e8950008a201b1002d49933"

@@ -39,7 +39,6 @@ module.exports = class Marcel {
 			base,
 			dataDir,
 			contentDir,
-			filters,
 			data,
 			markdown,
 			permalinks
@@ -54,13 +53,6 @@ module.exports = class Marcel {
 			let path = pretty_url(permalink, permalinks.pretty);
 			return normalize(path);
 		};
-
-		/*
-			Load filters
-		 */
-		Object.keys(filters).forEach(name =>
-			this.renderer.add_filter(name, filters[name])
-		);
 
 		/*
 			Load global data

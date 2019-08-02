@@ -37,5 +37,9 @@ module.exports = {
 			ignoreMissing: true
 		},
 		taskids: true
+	},
+	tags: {},
+	experimental: {
+		embedtag: false
 	}
 };

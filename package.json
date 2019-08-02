@@ -31,6 +31,7 @@
 		"mdast-util-to-string": "^1.0.6",
 		"micro": "^9.3.3",
 		"nunjucks": "^3.2.0",
+		"nunjucks-embed": "^0.1.0",
 		"rehype-autolink-headings": "^2.0.5",
 		"rehype-raw": "^4.0.0",
 		"rehype-slug": "^2.0.3",

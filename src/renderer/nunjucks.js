@@ -3,6 +3,8 @@ const { existsSync } = require('fs-extra');
 const { join } = require('path');
 const nunjucks = require('nunjucks');
 
+const EmbedTag = require('nunjucks-embed');
+
 const __tcache__ = new Map();
 
 const first_found = (templates, dir) =>
@@ -18,8 +20,32 @@ const first_found = (templates, dir) =>
 class NunjucksRenderer {
 	constructor(config) {
 		this.config = config;
-		this.env = nunjucks.configure(config.templateDir, {
+
+		let { templateDir, experimental, filters, tags } = this.config;
+
+		this.env = nunjucks.configure(templateDir, {
 			autoescape: false
+		});
+
+		/* 
+			Enable experimental {% embed %} tag 
+		*/
+		if (experimental.embedtag) {
+			this.env.addExtension('EmbedTag', new EmbedTag({ sync: false }));
+		}
+
+		/*
+			Load filters
+		 */
+		Object.keys(filters).forEach(name => {
+			this.add_filter(name, filters[name]);
+		});
+
+		/*
+			Load filters
+		 */
+		Object.keys(tags).forEach(name => {
+			this.env.addExtension(name, new tags[name]());
 		});
 	}
 
