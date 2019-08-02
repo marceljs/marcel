@@ -1,6 +1,6 @@
 // Libs
 const fs = require('fs-extra');
-const { join } = require('path');
+const { normalize, join } = require('path');
 const in_cwd = require('is-path-in-cwd');
 const fg = require('fast-glob');
 const vfile = require('to-vfile');
@@ -13,82 +13,114 @@ const html_proc = require('./markdown/html');
 
 // Utils
 const group_by = require('./util/group-by');
+const pretty_url = require('./util/pretty-url');
 
 // Models
 const Post = require('./model/post');
 const List = require('./model/list');
 const Renderer = require('./renderer/nunjucks');
 
-const default_options = {
-	// whether to include drafts in the build
-	drafts: false
-};
-
 module.exports = class Marcel {
 	constructor(cfg) {
-		// Configure Models
 		Post.Permalink = post => cfg.permalinks.single(post, cfg);
 		List.Permalink = list => cfg.permalinks.list(list, cfg);
-
 		this.renderer = new Renderer(cfg);
 		this.config = cfg;
 	}
 
 	async run(opts) {
 		let options = {
-			...default_options,
+			// whether to include drafts in the build
+			drafts: false,
 			...opts
 		};
 
-		let { dataDir, contentDir } = this.config;
+		let {
+			base,
+			dataDir,
+			contentDir,
+			filters,
+			data,
+			markdown,
+			permalinks
+		} = this.config;
 
-		// Load filters into Nunjucks
-		Object.keys(this.config.filters).forEach(name =>
-			this.renderer.add_filter(name, this.config.filters[name])
+		let finalizer = permalink => {
+			let path = pretty_url(permalink, permalinks.pretty);
+			return normalize(join(base, path));
+		};
+
+		let disk_finalizer = permalink => {
+			let path = pretty_url(permalink, permalinks.pretty);
+			return normalize(path);
+		};
+
+		/*
+			Load filters
+		 */
+		Object.keys(filters).forEach(name =>
+			this.renderer.add_filter(name, filters[name])
 		);
 
 		/*
 			Load global data
-			----------------
 		 */
-
-		let data_paths = await fg('**/*.{js,json,yaml,csv,tsv,ndtxt}', {
-			cwd: dataDir
-		});
-
-		let data_files = await Promise.all(
-			data_paths.map(path =>
-				vfile
-					.read({ path, cwd: dataDir }, 'utf8')
-					.then(require('./pipeline/parse-data'))
+		this.data = Object.fromEntries(
+			await Promise.all(
+				Object.entries(data).map(async ([name, val]) => {
+					return [
+						name,
+						typeof val === 'function' ? await val() : val
+					];
+				})
 			)
 		);
 
-		this.data = Object.fromEntries(data_files.map(f => [f.stem, f.data]));
+		if (dataDir) {
+			let data_paths = await fg('**/*.{js,json,yaml,csv,tsv,ndtxt}', {
+				cwd: dataDir
+			});
+
+			let data_files = await Promise.all(
+				data_paths.map(path =>
+					vfile
+						.read({ path, cwd: dataDir }, 'utf8')
+						.then(require('./pipeline/parse-data'))
+				)
+			);
+
+			// Combine data from the config object
+			// with data from the data folder.
+			this.data = {
+				...this.data,
+				...Object.fromEntries(data_files.map(f => [f.stem, f.data]))
+			};
+		}
 
 		/*
 			Load content files
-			------------------
 		 */
 
 		let content_paths = await fg('**/*.md', { cwd: contentDir });
 		let adjacent_fm = path => path.replace(/\.md$/, '.json');
 
-		let mdast = mdast_proc(this.config.markdown);
-		let hast = hast_proc(this.config.markdown);
-		let html = html_proc(this.config.markdown);
+		let mdast = mdast_proc(markdown);
+		let hast = hast_proc(markdown);
+		let html = html_proc(markdown);
 
 		let posts = await Promise.all(
 			content_paths.map(async path => {
-				let post = new Post();
-				await post.load(path, {
-					cwd: contentDir,
-					frontmatter_path: adjacent_fm(path)
-				});
+				let post = new Post(
+					{},
+					{
+						finalizer,
+						cwd: contentDir,
+						frontmatter_path: adjacent_fm(path)
+					}
+				);
+				await post.load(path);
 				try {
-					await post.execute(this.renderer.env, {
-						data: this.data
-					});
+					await post.execute(this.renderer.env, this.context());
 				} catch (err) {
 					console.error(`Template rendering error in ${path}:`, err);
 				}
@@ -97,11 +129,17 @@ module.exports = class Marcel {
 			})
 		);
 
+		/*
+			Filter out posts that should not be rendered.
+		 */
 		posts = posts.filter(
 			({ permalink, draft }) =>
 				permalink !== false && (!draft || options.drafts)
 		);
 
+		/*
+			Transform posts from MDAST to HAST
+		 */
 		posts = await Promise.all(
 			posts.map(async post => {
 				await post.transform(hast);
@@ -109,8 +147,14 @@ module.exports = class Marcel {
 			})
 		);
 
+		/*
+			Make sure all links point to the correct permalinks
+		 */
 		posts.forEach(post => post.apply_permalinks());
 
+		/*
+			Transform posts from HAST to HTML
+		 */
 		posts = await Promise.all(
 			posts.map(async post => {
 				await post.compile(html);
@@ -130,12 +174,15 @@ module.exports = class Marcel {
 				return t.include_undefined || term !== '__undefined__';
 			}
 
-			let list_index = new List({
-				taxonomy: t.from,
-				terms: groups
-					.filter(item => include_term(item[0]) && item[1].length)
-					.map(item => item[0])
-			});
+			let list_index = new List(
+				{
+					taxonomy: t.from,
+					terms: groups
+						.filter(item => include_term(item[0]) && item[1].length)
+						.map(item => item[0])
+				},
+				{ finalizer }
+			);
 
 			return res
 				.concat(
@@ -147,11 +194,14 @@ module.exports = class Marcel {
 					groups
 						.map(
 							item =>
-								new List({
-									taxonomy: t.from,
-									term: item[0],
-									posts: item[1]
-								})
+								new List(
+									{
+										taxonomy: t.from,
+										term: item[0],
+										posts: item[1]
+									},
+									{ finalizer }
+								)
 						)
 						.filter(
 							l =>
@@ -167,12 +217,7 @@ module.exports = class Marcel {
 			posts.map(async post => {
 				post.__rendered = await this.renderer.render(
 					post.templates,
-					{
-						post,
-						data: this.data,
-						Post,
-						List
-					},
+					this.context({ post }),
 					'{{ content }}'
 				);
 			})
@@ -184,14 +229,10 @@ module.exports = class Marcel {
 			lists.map(async list => {
 				return {
 					permalink: list.permalink,
+					__permalink: list.__permalink,
 					__rendered: await this.renderer.render(
 						list.templates,
-						{
-							list,
-							data: this.data,
-							Post,
-							List
-						},
+						this.context({ list }),
 						'{{ posts.length }}'
 					)
 				};
@@ -223,20 +264,22 @@ module.exports = class Marcel {
 		collections
 			.concat(posts)
 			.forEach(entry =>
-				this.write_page(entry.permalink, entry.__rendered)
+				this.write(disk_finalizer(entry.__permalink), entry.__rendered)
 			);
 	}
 
-	async write_page(permalink, content) {
-		/*
-			If the permalink ends in '.html',
-			don't append the '/index.html' part.
+	async write(permalink, content) {
+		fs.outputFileSync(join(this.config.distDir, permalink), content);
+	}
 
-			This lets us write files like 404.html on the disk.
-		 */
-		let output_path = permalink.match(/\.html$/)
-			? permalink
-			: join(permalink, 'index.html');
-		fs.outputFileSync(join(this.config.distDir, output_path), content);
+	context(extras) {
+		return {
+			...this.data,
+			data: this.data,
+			config: this.config,
+			Post,
+			List,
+			...extras
+		};
 	}
 };

@@ -7,7 +7,7 @@
 	"author": "Dan Burzo <danburzo@gmail.com>",
 	"license": "MIT",
 	"bin": {
-		"marcel": "src/cli.js"
+		"marcel": "./src/cli.js"
 	},
 	"engines": {
 		"node": ">= 8.0.0"
@@ -44,6 +44,7 @@
 		"serve-handler": "^6.1.0",
 		"strip-bom": "^4.0.0",
 		"strip-markdown": "^3.0.3",
+		"time-require": "^0.1.2",
 		"to-vfile": "^6.0.0",
 		"toml": "^3.0.0",
 		"unified": "^8.3.2",

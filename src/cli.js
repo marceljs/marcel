@@ -27,7 +27,7 @@ async function bundle(options) {
 				cwd: process.cwd()
 			},
 			() => {
-				console.log('Rebuilding');
+				console.log('Rebuilding...');
 				return run(cfg, options);
 			}
 		);
@@ -35,7 +35,18 @@ async function bundle(options) {
 	run(cfg, options);
 }
 
-program;
+async function serve(options) {
+	let cfg = await config();
+	await bundle(options);
+	const server = micro(async (req, res) => {
+		return handler(req, res, {
+			public: cfg.distDir
+		});
+	});
+	let p = options.port || 3000;
+	server.listen(p);
+	console.log(`Started server at: http://localhost:${p}`);
+}
 
 program
 	.command('serve')
@@ -43,18 +54,7 @@ program
 	.option('-w, --watch', 'Watch for changes and rebuild')
 	.option('-d, --drafts', 'Include drafts')
 	.option('--port [port]', 'port (default: 3000)')
-	.action(async function(options) {
-		let cfg = await config();
-		await bundle(options);
-		const server = micro(async (req, res) => {
-			return handler(req, res, {
-				public: cfg.distDir
-			});
-		});
-		let p = options.port || 3000;
-		server.listen(p);
-		console.log(`Started server at: http://localhost:${p}`);
-	});
+	.action(serve);
 
 program
 	.command('build')

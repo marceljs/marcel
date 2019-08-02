@@ -8,6 +8,7 @@ module.exports = {
 		format_date: require('./filters/format_date'),
 		sort_by: require('./filters/sort_by')
 	},
+	data: {},
 	base: '/',
 	templateExt: 'html',
 	lists: [
@@ -25,6 +26,7 @@ module.exports = {
 	],
 	plugins: [],
 	permalinks: {
+		pretty: true,
 		single: (post, config) => {},
 		list: (post, config) => {}
 	},
